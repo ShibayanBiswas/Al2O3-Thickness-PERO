@@ -109,3 +109,12 @@ outputs/
 - Optional libraries (SHAP, XGBoost, LightGBM, CatBoost) are **auto-detected**. If not installed, the pipeline will skip those sections and continue without crashing.
 - All figures are saved at high resolution and use consistent, publication-quality styling.
 
+## Documentation Map
+
+The codebase includes folder level documentation so that every major artifact directory is self describing.
+
+- **`Data/README.md`**: dataset provenance, strict sheet selection rule, and schema expectations.
+- **`src/README.md`**: module by module architecture and responsibilities.
+- **`notebooks/README.md`**: notebook entry point purpose and how it relates to the pipeline.
+- **`outputs/**/README.md`**: plot and table inventories, naming conventions, and interpretation notes for each output category.
+

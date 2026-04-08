@@ -1,7 +1,10 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-outputs/
+outputs/**
+!outputs/**/
+!outputs/**/README.md
+!outputs/**/summary_report.md
 catboost_info/
 .DS_Store
 Thumbs.db

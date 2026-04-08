@@ -1,0 +1,9 @@
+# Explainability Outputs
+
+This directory explains how thickness influences each target for the selected best overall model. Since the feature space is one dimensional, explainability is fundamentally a study of a response curve rather than attribution across many inputs. The goal is to provide interpretable, export ready visual evidence for whether thickness has a monotonic effect, a threshold effect, or a more complex nonlinear pattern for each electrochemical outcome.
+
+Permutation importance is reported per target as a drop in \(R^2\) when thickness is randomly permuted. In a single feature setting this becomes a sensitivity diagnostic: if permuting thickness collapses \(R^2\), the model is relying strongly on thickness; if the drop is small, thickness may be weakly informative relative to noise. This table is robust and model agnostic and complements shape based plots.
+
+Where supported, partial dependence and individual conditional expectation plots are exported. In one dimension, PDP becomes a smoothed estimate of \(\hat{y}(x)\) while ICE shows how individual observations follow that curve. These plots are paired with a sensitivity curve that overlays the predicted response with a local slope estimate, which is a practical approximation of \(\frac{d\hat{y}}{dx}\) for identifying thickness ranges where the response is most sensitive.
+
+SHAP exports are included when the installed SHAP library supports the selected estimator. In one dimension, SHAP values primarily reflect how the prediction shifts as thickness moves away from the reference distribution. These plots should be interpreted as a consistent explanation of a one dimensional response function rather than as a competition among multiple inputs. All exports are formatted for integration into a research report without additional manual styling work.

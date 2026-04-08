@@ -1,0 +1,11 @@
+# Explainability Plots Index
+
+This directory contains plots that explain how thickness influences each target for the selected best overall model. In a one dimensional feature space, explainability focuses on the shape of the learned response function \(\hat{y}(x)\) and on how predictions change as thickness varies. These plots are formatted in the PERO style theme so that the background, grid, typography, line smoothing, and shaded uncertainty bands remain consistent with EDA and modeling diagnostics.
+
+The folder is segregated into three subdirectories in a fixed order. **PartialDependence** contains “Partial Dependence And ICE” plots computed on a thickness grid. In one dimension, partial dependence is a direct visualization of \(\hat{y}(x)\). ICE is represented by a collection of bootstrap refit curves so you can see how the response shape varies under resampling. A shaded band is included to represent a robust uncertainty envelope across refits.
+
+**Sensitivity** contains a two panel figure per target. The top panel shows the smoothed predicted response with a mandatory shaded uncertainty band obtained by bootstrap refitting, and the bottom panel shows the smoothed local slope estimate with a shaded area fill. In symbols, the slope panel is a numerical approximation of \(\frac{d\hat{y}}{dx}\). This structure makes it easy to identify thickness regimes where the predicted response is most sensitive to small changes in thickness.
+
+**Shap** contains a full SHAP suite per target, including a beeswarm style scatter of SHAP values against thickness, a bar style summary based on mean absolute SHAP magnitude, and multiple waterfall style plots for representative samples across the thickness range. Because there is only one true feature, these plots should be interpreted as a one dimensional attribution that is consistent with the fitted response curve rather than as a multi feature importance competition.
+
+All legends in this directory are intentionally moved outside the axes region so that they never overlap the data, shaded uncertainty bands, or slope areas. This preserves visual clarity even when multiple curves or bands are present. The plots are designed for direct use in a thesis appendix or journal style supplementary materials section, with mathematical notation expressed using LaTeX style mathtext.
