@@ -369,28 +369,83 @@ def run_deep_eda(
 
     # 2.5 Relationship matrix
     num_df = df[[x_col, *y_cols]].copy()
+    # Use short, display-safe names to avoid axis label overlap in dense grids
+    # Pair plots are especially sensitive to long axis labels.
+    display_name = {x_col: "Thickness"}
+    display_name.update(
+        {
+            "Rct_initial_ohm": "Rct Initial",
+            "ICE_percent": "Coulombic Efficiency",
+            "Initial Reversible Capacity_mAh_g at 0.1C": "Reversible Capacity",
+            "Highest Capacity Retention_percent": "Capacity Retention",
+        }
+    )
+    for y in y_cols:
+        display_name.setdefault(y, labels.target_title_map.get(y, to_title_case(strip_parentheses_text(y))))
+    num_df_disp = num_df.rename(columns=display_name)
+
     pearson_corr = num_df.corr(method="pearson")
     spearman_corr = num_df.corr(method="spearman")
     pearson_corr.to_csv(out_tables / "07_corr_pearson.csv")
     spearman_corr.to_csv(out_tables / "08_corr_spearman.csv")
 
     fig, ax = with_axes(figsize=(10, 8))
-    sns.heatmap(pearson_corr, annot=True, fmt=".2f", cmap="vlag", ax=ax)
+    set_dark_background(fig, ax)
+    sns.heatmap(
+        pearson_corr.rename(index=display_name, columns=display_name),
+        annot=True,
+        fmt=".2f",
+        cmap="vlag",
+        ax=ax,
+        cbar_kws={"shrink": 0.85},
+    )
     ax.set_title("Correlation Heatmap Pearson")
+    ax.tick_params(axis="x", labelrotation=28, labelsize=10)
+    ax.tick_params(axis="y", labelrotation=0, labelsize=10)
+    for lab in ax.get_xticklabels():
+        lab.set_horizontalalignment("right")
+    fig.tight_layout(pad=1.2)
     polish_axes(ax)
     savefig(fig, out_rel, "Correlation Heatmap Pearson", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
     fig, ax = with_axes(figsize=(10, 8))
-    sns.heatmap(spearman_corr, annot=True, fmt=".2f", cmap="vlag", ax=ax)
+    set_dark_background(fig, ax)
+    sns.heatmap(
+        spearman_corr.rename(index=display_name, columns=display_name),
+        annot=True,
+        fmt=".2f",
+        cmap="vlag",
+        ax=ax,
+        cbar_kws={"shrink": 0.85},
+    )
     ax.set_title("Correlation Heatmap Spearman")
+    ax.tick_params(axis="x", labelrotation=28, labelsize=10)
+    ax.tick_params(axis="y", labelrotation=0, labelsize=10)
+    for lab in ax.get_xticklabels():
+        lab.set_horizontalalignment("right")
+    fig.tight_layout(pad=1.2)
     polish_axes(ax)
     savefig(fig, out_rel, "Correlation Heatmap Spearman", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
     # Pairplot (can be heavy but dataset is tiny)
     try:
-        pp = sns.pairplot(num_df, corner=True, diag_kind="hist")
+        pp = sns.pairplot(num_df_disp, corner=True, diag_kind="hist")
         pp.fig.suptitle("Pair Plot Numeric Variables", y=1.02)
-        pp.fig.tight_layout()
+        # Make axes labels readable without overlap
+        try:
+            set_dark_background(pp.fig, [ax for ax in pp.axes.flatten() if ax is not None])
+        except Exception:
+            pass
+        for axp in [ax for ax in pp.axes.flatten() if ax is not None]:
+            try:
+                axp.tick_params(axis="x", labelrotation=28, labelsize=9)
+                axp.tick_params(axis="y", labelrotation=0, labelsize=9)
+                for lab in axp.get_xticklabels():
+                    lab.set_horizontalalignment("right")
+            except Exception:
+                pass
+        pp.fig.subplots_adjust(left=0.10, bottom=0.10, right=0.98, top=0.94, wspace=0.08, hspace=0.08)
+        pp.fig.tight_layout(pad=1.1, rect=[0, 0, 0.98, 0.94])
         out_path = out_rel / f"{safe_filename('Pair Plot Numeric Variables')}.{cfg.figure_format}"
         pp.fig.savefig(out_path, dpi=cfg.figure_dpi, bbox_inches="tight")
         plt.close(pp.fig)
