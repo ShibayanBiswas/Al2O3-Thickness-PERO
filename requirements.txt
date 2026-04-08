@@ -1,0 +1,17 @@
+numpy
+pandas
+scipy
+matplotlib
+seaborn
+statsmodels
+scikit-learn
+openpyxl
+xlsxwriter
+tqdm
+tabulate
+
+# Optional (code will gracefully skip if unavailable)
+shap
+xgboost
+lightgbm
+catboost
