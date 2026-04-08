@@ -128,7 +128,7 @@ def shap_explain_1d_single_output(
         ax.set_title(f"{t_title} Shap Summary Beeswarm")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel("Shap Value")
-        ax.legend(loc="upper right")
+        legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_beeswarm__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     except Exception:
