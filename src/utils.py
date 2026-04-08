@@ -153,3 +153,30 @@ def safe_sheet_name(name: str) -> str:
         name = "Sheet"
     return name[:31]
 
+
+def smooth_curve_1d(y: np.ndarray) -> np.ndarray:
+    """Savitzky–Golay or moving-average smoothing for line plots."""
+    y = np.asarray(y, dtype=float)
+    if y.size < 3:
+        return y
+    sp = optional_import("scipy.signal")
+    if sp is not None and y.size >= 5:
+        try:
+            w = 11 if y.size >= 11 else (y.size // 2) * 2 + 1
+            w = max(5, w)
+            if w > y.size:
+                w = y.size if y.size % 2 == 1 else y.size - 1
+            if w < 3:
+                return y
+            po = min(3, w - 1)
+            return np.asarray(sp.savgol_filter(y, window_length=w, polyorder=po), dtype=float)
+        except Exception:
+            pass
+    if y.size < 5:
+        return y
+    k = min(5, y.size | 1)
+    if k < 3:
+        return y
+    kernel = np.ones(k) / k
+    return np.convolve(y, kernel, mode="same")
+

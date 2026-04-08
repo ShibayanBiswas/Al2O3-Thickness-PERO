@@ -7,7 +7,16 @@ import numpy as np
 import pandas as pd
 
 from .plots import annotate_extremes, savefig, with_axes
-from .utils import ensure_dir, iqr_outliers, optional_import, safe_filename, strip_parentheses_text, to_title_case, zscore_outliers
+from .utils import (
+    ensure_dir,
+    iqr_outliers,
+    optional_import,
+    safe_filename,
+    smooth_curve_1d,
+    strip_parentheses_text,
+    to_title_case,
+    zscore_outliers,
+)
 from .viz_style import get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
 
@@ -143,12 +152,13 @@ def run_deep_eda(
         x_ecdf, y_ecdf = _ecdf(vals)
         fig, ax = with_axes(figsize=(10, 6))
         set_dark_background(fig, ax)
-        # Line only, no markers
-        ax.plot(x_ecdf, y_ecdf, linestyle="-", alpha=0.92, color="#F7B801")
-        ax.fill_between(x_ecdf, 0, y_ecdf, alpha=0.12, color="#F7B801")
+        y_ecdf_s = smooth_curve_1d(y_ecdf) if x_ecdf.size >= 3 else y_ecdf
+        ax.fill_between(x_ecdf, 0, y_ecdf_s, alpha=0.12, color="#F7B801", label="Cumulative Area")
+        ax.plot(x_ecdf, y_ecdf_s, linestyle="-", alpha=0.92, linewidth=2.8, color="#F7B801", label="Smoothed ECDF")
         ax.set_title(f"{title} Empirical Cumulative Distribution")
         ax.set_xlabel(display)
         ax.set_ylabel("Cumulative Probability")
+        legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
         savefig(fig, var_dir, f"Empirical Cumulative Distribution", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
@@ -236,8 +246,14 @@ def run_deep_eda(
             q50 = gq[0.5].to_numpy(dtype=float)
             q75 = gq[0.75].to_numpy(dtype=float)
             order = np.argsort(gx)
-            ax.fill_between(gx[order], q25[order], q75[order], color="#EAF0FF", alpha=0.08, label="Interquartile Band")
-            ax.plot(gx[order], q50[order], color="#9FD356", linewidth=2.8, label="Median By Thickness")
+            q25s = smooth_curve_1d(q25[order])
+            q75s = smooth_curve_1d(q75[order])
+            q50s = smooth_curve_1d(q50[order])
+            gxo = gx[order]
+            ax.fill_between(gxo, q25s, q75s, color="#EAF0FF", alpha=0.08, label="Interquartile Band")
+            ax.plot(gxo, q50s, color="#9FD356", linewidth=2.8, label="Median By Thickness")
+            ax.plot(gxo, q25s, color="#9FD356", linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Lower")
+            ax.plot(gxo, q75s, color="#9FD356", linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Upper")
         except Exception:
             pass
 
@@ -245,12 +261,13 @@ def run_deep_eda(
         try:
             gx, gp = _polynomial_fit(x, yv, degree=1)
             ax.plot(gx, gp, color="#FF9F1C", linewidth=3.2, label="Linear Trend")
-            # Shade a narrow band around the linear trend based on residual spread
             pred_x = np.polyval(np.polyfit(x, yv, deg=1), x)
             resid = yv - pred_x
             band = float(np.nanstd(resid, ddof=1)) if np.isfinite(np.nanstd(resid, ddof=1)) else 0.0
             if band > 0:
                 ax.fill_between(gx, gp - band, gp + band, color="#FF9F1C", alpha=0.08, label="Trend Band")
+                ax.plot(gx, gp - band, color="#FF9F1C", linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Lower Boundary")
+                ax.plot(gx, gp + band, color="#FF9F1C", linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Upper Boundary")
         except Exception:
             pass
 
@@ -268,22 +285,24 @@ def run_deep_eda(
         set_dark_background(fig, ax)
         xs = x[order]
         ys = yv[order]
-        # Smooth line
-        try:
-            from scipy.signal import savgol_filter
-
-            w = 11 if ys.size >= 11 else (ys.size // 2) * 2 + 1
-            ys_s = savgol_filter(ys, window_length=max(5, w), polyorder=3)
-        except Exception:
-            ys_s = ys
+        ys_s = smooth_curve_1d(ys)
         ax.plot(xs, ys_s, linewidth=3.0, color="#5BC0EB", label="Smoothed Profile")
-        # Mandatory shaded band: rolling interquartile around the sorted curve
+        span = float(np.nanmax(ys_s) - np.nanmin(ys_s) + 1e-9)
+        y_floor = float(np.nanmin(ys_s) - 0.03 * span)
+        ax.fill_between(xs, y_floor, ys_s, color="#5BC0EB", alpha=0.08, label="Profile Area")
         try:
             s = pd.Series(ys)
-            q25 = s.rolling(window=min(9, max(3, ys.size // 5)), center=True, min_periods=1).quantile(0.25).to_numpy()
-            q75 = s.rolling(window=min(9, max(3, ys.size // 5)), center=True, min_periods=1).quantile(0.75).to_numpy()
-            ax.fill_between(xs, q25, q75, color="#EAF0FF", alpha=0.10, label="Interquartile Band")
-            ax.plot(xs, pd.Series(ys).rolling(window=min(9, max(3, ys.size // 5)), center=True, min_periods=1).median(), color="#9FD356", linewidth=2.4, label="Rolling Median")
+            win = min(9, max(3, ys.size // 5))
+            q25 = s.rolling(window=win, center=True, min_periods=1).quantile(0.25).to_numpy()
+            q75 = s.rolling(window=win, center=True, min_periods=1).quantile(0.75).to_numpy()
+            med = s.rolling(window=win, center=True, min_periods=1).median().to_numpy()
+            q25s = smooth_curve_1d(q25)
+            q75s = smooth_curve_1d(q75)
+            meds = smooth_curve_1d(med)
+            ax.fill_between(xs, q25s, q75s, color="#EAF0FF", alpha=0.10, label="Interquartile Band")
+            ax.plot(xs, meds, color="#9FD356", linewidth=2.4, label="Rolling Median")
+            ax.plot(xs, q25s, color="#9FD356", linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Lower")
+            ax.plot(xs, q75s, color="#9FD356", linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Upper")
         except Exception:
             pass
         ax.set_title(f"{y_title} Sorted By Thickness")
@@ -330,14 +349,21 @@ def run_deep_eda(
 
     # Plot group-wise means with error bars
     for y in y_cols:
-        g = df.groupby(x_col)[y].agg(["count", "mean", "std"]).reset_index()
+        g = df.groupby(x_col)[y].agg(["count", "mean", "std"]).reset_index().sort_values(x_col)
         fig, ax = with_axes(figsize=(11, 6))
         set_dark_background(fig, ax)
         y_title = labels.target_title_map.get(y, to_title_case(strip_parentheses_text(y)))
         y_label = labels.y_label_map.get(y, to_title_case(strip_parentheses_text(y)))
-        # Line only, no markers
-        ax.errorbar(g[x_col], g["mean"], yerr=g["std"], fmt="-", capsize=5, linewidth=3.0, color="#9FD356", label="Mean With Spread")
-        ax.fill_between(g[x_col], g["mean"] - g["std"], g["mean"] + g["std"], color="#9FD356", alpha=0.12)
+        gx = g[x_col].to_numpy(dtype=float)
+        mu = g["mean"].to_numpy(dtype=float)
+        sg = g["std"].to_numpy(dtype=float)
+        mu_s = smooth_curve_1d(mu)
+        lo_s = smooth_curve_1d(mu - sg)
+        hi_s = smooth_curve_1d(mu + sg)
+        ax.fill_between(gx, lo_s, hi_s, color="#9FD356", alpha=0.14, label="Uncertainty Band")
+        ax.plot(gx, mu_s, linestyle="-", linewidth=3.0, color="#9FD356", label="Mean Curve")
+        ax.plot(gx, lo_s, linestyle="--", linewidth=1.2, color="#9FD356", alpha=0.55, label="Lower Boundary")
+        ax.plot(gx, hi_s, linestyle="--", linewidth=1.2, color="#9FD356", alpha=0.55, label="Upper Boundary")
         ax.set_title(f"{y_title} Group Mean With Uncertainty")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)

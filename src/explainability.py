@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from .plots import savefig, with_axes
-from .utils import ensure_dir, optional_import, safe_filename, strip_parentheses_text, to_title_case
+from .utils import ensure_dir, optional_import, safe_filename, smooth_curve_1d, strip_parentheses_text, to_title_case
 from .viz_style import get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
 
@@ -120,8 +120,12 @@ def shap_explain_1d_single_output(
         # Smooth trend of SHAP value vs thickness
         try:
             order = np.argsort(xvals)
-            ax.plot(xvals[order], _smooth_curve(svals[order]), color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
-            ax.fill_between(xvals[order], _smooth_curve(svals[order]) - np.nanstd(svals), _smooth_curve(svals[order]) + np.nanstd(svals), color="#FF9F1C", alpha=0.08, label="Trend Band")
+            s_ord = smooth_curve_1d(svals[order])
+            ax.plot(xvals[order], s_ord, color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
+            ax.fill_between(
+                xvals[order], s_ord - np.nanstd(svals), s_ord + np.nanstd(svals), color="#FF9F1C", alpha=0.08, label="Trend Band"
+            )
+            ax.fill_between(xvals[order], 0, s_ord, color="#FF9F1C", alpha=0.05, label="Trend Area")
         except Exception:
             pass
 
@@ -184,16 +188,17 @@ def shap_explain_1d_single_output(
         )
         ax.scatter(xj, svals, s=62, alpha=0.78, color="#5BC0EB", edgecolor="#0B0F1A", linewidth=0.8, label="Shap Values")
 
-        # smoothed central trend with band
-        ax.plot(xvals[order], _smooth_curve(svals[order]), color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
+        s_ord = smooth_curve_1d(svals[order])
+        ax.plot(xvals[order], s_ord, color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
         ax.fill_between(
             xvals[order],
-            _smooth_curve(svals[order]) - np.nanstd(svals),
-            _smooth_curve(svals[order]) + np.nanstd(svals),
+            s_ord - np.nanstd(svals),
+            s_ord + np.nanstd(svals),
             color="#FF9F1C",
             alpha=0.08,
             label="Trend Band",
         )
+        ax.fill_between(xvals[order], 0, s_ord, color="#FF9F1C", alpha=0.05, label="Trend Area")
 
         ax.set_title(f"{t_title} Shap Dependence")
         ax.set_xlabel(labels.x_label)
@@ -265,14 +270,21 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
 
         # ICE lines as bootstrapped response curves
         if band is not None and band.shape[2] > j:
-            # draw a small subset of lines
             for k in range(min(25, band.shape[0])):
-                ax.plot(x_grid, _smooth_curve(band[k, :, j]), color="#EAF0FF", alpha=0.10, linewidth=1.0)
+                ax.plot(x_grid, smooth_curve_1d(band[k, :, j]), color="#EAF0FF", alpha=0.10, linewidth=1.0)
             q10 = np.nanpercentile(band[:, :, j], 10, axis=0)
             q90 = np.nanpercentile(band[:, :, j], 90, axis=0)
-            ax.fill_between(x_grid, q10, q90, color="#EAF0FF", alpha=0.10, label="ICE Band")
+            q10s = smooth_curve_1d(q10)
+            q90s = smooth_curve_1d(q90)
+            ax.fill_between(x_grid, q10s, q90s, color="#EAF0FF", alpha=0.10, label="ICE Band")
+            ax.plot(x_grid, q10s, color="#EAF0FF", linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Lower Boundary")
+            ax.plot(x_grid, q90s, color="#EAF0FF", linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Upper Boundary")
 
-        ax.plot(x_grid, _smooth_curve(Yg[:, j]), color="#5BC0EB", linewidth=3.2, label="Partial Dependence")
+        pdp_line = smooth_curve_1d(Yg[:, j])
+        ax.plot(x_grid, pdp_line, color="#5BC0EB", linewidth=3.2, label="Partial Dependence")
+        span = float(np.nanmax(pdp_line) - np.nanmin(pdp_line) + 1e-9)
+        y_floor = float(np.nanmin(pdp_line) - 0.04 * span)
+        ax.fill_between(x_grid, y_floor, pdp_line, color="#5BC0EB", alpha=0.07, label="Response Area")
         ax.set_title(f"{t_title} Partial Dependence And ICE")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
@@ -281,24 +293,6 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
         saved.append(savefig(fig, out_plots, f"Partial Dependence And ICE__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 
     return saved
-
-
-def _smooth_curve(y: np.ndarray) -> np.ndarray:
-    y = np.asarray(y, dtype=float)
-    sp = optional_import("scipy.signal")
-    if sp is not None and y.size >= 9:
-        try:
-            # Savitzky Golay gives smooth curves without phase lag
-            w = 11 if y.size >= 11 else (y.size // 2) * 2 + 1
-            return sp.savgol_filter(y, window_length=w, polyorder=3)
-        except Exception:
-            pass
-    # fallback moving average
-    if y.size < 5:
-        return y
-    k = 5
-    kernel = np.ones(k) / k
-    return np.convolve(y, kernel, mode="same")
 
 
 def _bootstrap_prediction_band(
@@ -372,9 +366,9 @@ def local_sensitivity_curve(
     saved: list[Path] = []
     for j, target in enumerate(y_cols):
         yg = Yg[:, j]
-        yg_s = _smooth_curve(yg)
+        yg_s = smooth_curve_1d(yg)
         dydx = np.gradient(yg_s, x_grid)
-        dydx_s = _smooth_curve(dydx)
+        dydx_s = smooth_curve_1d(dydx)
 
         labels = get_display_labels(x_col=X.columns[0], y_cols=[target])
         t_title = labels.target_title_map.get(target, to_title_case(strip_parentheses_text(target)))
@@ -385,13 +379,18 @@ def local_sensitivity_curve(
         axs = axes[1]
         set_dark_background(fig, [ax, axs])
 
-        # Mandatory shaded uncertainty band
+        q10_u = q90_u = None
         if band is not None and band.shape[2] > j:
-            q10 = np.nanpercentile(band[:, :, j], 10, axis=0)
-            q90 = np.nanpercentile(band[:, :, j], 90, axis=0)
-            ax.fill_between(x_grid, q10, q90, color="#EAF0FF", alpha=0.10, label="Uncertainty Band")
+            q10_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 10, axis=0))
+            q90_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 90, axis=0))
+            ax.fill_between(x_grid, q10_u, q90_u, color="#EAF0FF", alpha=0.10, label="Uncertainty Band")
+            ax.plot(x_grid, q10_u, color="#5BC0EB", linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Lower")
+            ax.plot(x_grid, q90_u, color="#5BC0EB", linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Upper")
 
         ax.plot(x_grid, yg_s, linewidth=3.2, color="#5BC0EB", label="Predicted Response")
+        span_y = float(np.nanmax(yg_s) - np.nanmin(yg_s) + 1e-9)
+        y_lo_fill = float(np.nanmin(yg_s) - 0.04 * span_y)
+        ax.fill_between(x_grid, y_lo_fill, yg_s, color="#5BC0EB", alpha=0.08, label="Response Fill")
         ax.set_title(f"{t_title} Sensitivity Curve")
         ax.set_ylabel(y_label)
         legend_outside_top_right(ax, ncol=1)
@@ -400,6 +399,8 @@ def local_sensitivity_curve(
         # Slope panel with shaded magnitude band
         axs.fill_between(x_grid, 0, dydx_s, color="#D7263D", alpha=0.12, label="Slope Area")
         axs.plot(x_grid, dydx_s, linewidth=2.6, color="#D7263D", label="Local Slope")
+        sspan = float(np.nanmax(dydx_s) - np.nanmin(dydx_s) + 1e-12)
+        axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color="#D7263D", alpha=0.06, label="Slope Band")
         axs.set_xlabel(labels.x_label)
         axs.set_ylabel("Local Slope")
         legend_outside_top_right(axs, ncol=1)

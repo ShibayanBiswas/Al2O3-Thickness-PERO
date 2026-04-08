@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 
 from .plots import savefig, with_axes
-from .utils import ensure_dir, safe_filename, strip_parentheses_text, to_title_case
-from .viz_style import get_display_labels, polish_axes
+from .utils import ensure_dir, safe_filename, smooth_curve_1d, strip_parentheses_text, to_title_case
+from .viz_style import get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
 
 def qqplot_residuals(ax, residuals: np.ndarray, title: str):
@@ -30,7 +30,10 @@ def qqplot_residuals(ax, residuals: np.ndarray, title: str):
             (osm, osr), (slope, intercept, r_) = stats.probplot(r, dist="norm")
             ax.scatter(osm, osr, s=30, alpha=0.8)
             x = np.asarray(osm)
-            ax.plot(x, slope * x + intercept, color="red", linewidth=2)
+            yref = slope * x + intercept
+            yref_s = smooth_curve_1d(yref) if yref.size >= 5 else yref
+            ax.fill_between(x, yref_s - 0.02 * np.nanstd(osr), yref_s + 0.02 * np.nanstd(osr), color="#D7263D", alpha=0.12, label="Reference Band")
+            ax.plot(x, yref_s, color="#D7263D", linewidth=2.4, label="Smoothed Reference")
             ax.set_title(title)
             ax.set_xlabel("Theoretical Quantiles")
             ax.set_ylabel("Ordered Residuals")
@@ -80,20 +83,22 @@ def diagnostic_plots_per_target(
 
     # Actual vs Predicted (parity)
     fig, ax = with_axes(figsize=(7, 7))
+    set_dark_background(fig, ax)
     ax.scatter(y_true, y_pred, s=62, alpha=0.86, edgecolor="#0B0F1A", linewidth=0.8, color="#5BC0EB")
     lims = [float(min(y_true.min(), y_pred.min())), float(max(y_true.max(), y_pred.max()))]
-    ax.plot(lims, lims, linestyle="--", linewidth=2.2, color="#EAF0FF", alpha=0.9, label="Parity Reference")
-    # Mandatory area shade: parity band using residual spread
+    xs_p = np.linspace(lims[0], lims[1], 200)
+    ax.plot(xs_p, xs_p, linestyle="--", linewidth=2.2, color="#EAF0FF", alpha=0.9, label="Parity Reference")
     band = float(np.nanstd(resid, ddof=1)) if np.isfinite(np.nanstd(resid, ddof=1)) else 0.0
     if band > 0:
-        xs = np.linspace(lims[0], lims[1], 200)
-        ax.fill_between(xs, xs - band, xs + band, color="#EAF0FF", alpha=0.08, label="Parity Band")
+        ax.fill_between(xs_p, xs_p - band, xs_p + band, color="#EAF0FF", alpha=0.08, label="Parity Band")
+        ax.plot(xs_p, xs_p - band, color="#EAF0FF", linewidth=1.0, linestyle=":", alpha=0.55, label="Parity Lower Boundary")
+        ax.plot(xs_p, xs_p + band, color="#EAF0FF", linewidth=1.0, linestyle=":", alpha=0.55, label="Parity Upper Boundary")
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     ax.set_title(f"{target_title} Parity Plot")
     ax.set_xlabel("Actual")
     ax.set_ylabel("Predicted")
-    ax.legend(loc="best")
+    legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, calib_dir, f"Parity Plot__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 
@@ -161,12 +166,22 @@ def diagnostic_plots_per_target(
 
     # Sorted actual vs sorted predicted (distributional calibration)
     fig, ax = with_axes(figsize=(10, 6))
-    ax.plot(np.sort(y_true), label="Sorted Actual", linewidth=2.6, color="#9FD356")
-    ax.plot(np.sort(y_pred), label="Sorted Predicted", linewidth=2.6, color="#5BC0EB")
+    set_dark_background(fig, ax)
+    n_s = y_true.size
+    idx = np.arange(n_s, dtype=float)
+    ya = np.sort(y_true)
+    yp = np.sort(y_pred)
+    ya_s = smooth_curve_1d(ya)
+    yp_s = smooth_curve_1d(yp)
+    lo = np.minimum(ya_s, yp_s)
+    hi = np.maximum(ya_s, yp_s)
+    ax.fill_between(idx, lo, hi, color="#EAF0FF", alpha=0.10, label="Between Curves Area")
+    ax.plot(idx, ya_s, label="Sorted Actual", linewidth=2.8, color="#9FD356")
+    ax.plot(idx, yp_s, label="Sorted Predicted", linewidth=2.8, color="#5BC0EB")
     ax.set_title(f"{target_title} Sorted Actual And Predicted")
     ax.set_xlabel("Sorted Index")
     ax.set_ylabel(y_label)
-    ax.legend(loc="best")
+    legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, calib_dir, f"Sorted Actual And Predicted__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 
