@@ -143,7 +143,6 @@ def shap_explain_1d_single_output(
         ax.barh(["Thickness"], [mean_abs], color="#9FD356")
         ax.set_title(f"{t_title} Shap Summary Bar")
         ax.set_xlabel("Mean Absolute Shap Value")
-        ax.legend(handles=[], labels=[], loc="upper right")
         ax.text(
             0.98,
             0.98,
@@ -156,6 +155,52 @@ def shap_explain_1d_single_output(
         )
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_bar__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    except Exception:
+        pass
+
+    # Custom Dependence Plot for Single Feature
+    try:
+        import matplotlib.pyplot as plt
+
+        xvals = X_use.iloc[:, 0].to_numpy(dtype=float)
+        svals = np.asarray(shap_values.values, dtype=float).reshape(-1)
+
+        # jitter in x for discrete thickness
+        rng = np.random.default_rng(getattr(cfg, "random_seed", 42))
+        xj = xvals + rng.normal(0, 0.02 * (np.nanmax(xvals) - np.nanmin(xvals) + 1e-9), size=xvals.shape)
+
+        fig, ax = plt.subplots(figsize=(12, 7))
+        set_dark_background(fig, ax)
+
+        # global SHAP band
+        order = np.argsort(xvals)
+        ax.fill_between(
+            xvals[order],
+            np.quantile(svals, 0.10) * np.ones_like(xvals[order]),
+            np.quantile(svals, 0.90) * np.ones_like(xvals[order]),
+            color="#EAF0FF",
+            alpha=0.06,
+            label="Shap Band",
+        )
+        ax.scatter(xj, svals, s=62, alpha=0.78, color="#5BC0EB", edgecolor="#0B0F1A", linewidth=0.8, label="Shap Values")
+
+        # smoothed central trend with band
+        ax.plot(xvals[order], _smooth_curve(svals[order]), color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
+        ax.fill_between(
+            xvals[order],
+            _smooth_curve(svals[order]) - np.nanstd(svals),
+            _smooth_curve(svals[order]) + np.nanstd(svals),
+            color="#FF9F1C",
+            alpha=0.08,
+            label="Trend Band",
+        )
+
+        ax.set_title(f"{t_title} Shap Dependence")
+        ax.set_xlabel(labels.x_label)
+        ax.set_ylabel("Shap Value")
+        legend_outside_top_right(ax, ncol=1)
+        polish_axes(ax)
+        saved.append(savefig(fig, out_plots, f"shap_dependence__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     except Exception:
         pass
 
@@ -180,7 +225,7 @@ def shap_explain_1d_single_output(
             ax.axvline(pred, color="#EAF0FF", linewidth=2.2, linestyle="--", label="Predicted Value")
             ax.set_title(f"{t_title} Shap Waterfall")
             ax.set_xlabel("Model Output")
-            ax.legend(loc="upper right")
+            legend_outside_top_right(ax, ncol=1)
             polish_axes(ax)
             saved.append(savefig(fig, out_plots, f"shap_waterfall__{target}__sample{k}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     except Exception:

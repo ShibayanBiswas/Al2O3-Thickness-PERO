@@ -1,19 +1,9 @@
 # Univariate Plots
 
-Univariate views emphasize distributional shape, robust spread, and tail structure for each variable. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small and many thickness values are repeated, the univariate suite is designed to show both smooth distributional behavior and discrete clustering.
+Univariate views emphasize distributional shape, robust spread, and tail structure for each variable. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small, these plots are intentionally clean and avoid excessive panel counts that would reduce interpretability.
 
-## Folder Structure
+For distribution style plots, focus on whether the observed values cluster tightly at a small set of levels or whether the variable behaves continuously. For thickness, the concentration at the zero level is expected to be dominant, so plots should be interpreted in a mixed discrete and continuous sense. The goal is not to force a continuous narrative but to represent what the experiment actually provides.
 
-This directory contains one subfolder per variable. Each variable subfolder contains a consistent set of images. This design keeps file names short and prevents Windows path issues while also making it easy to cite a specific variable in a report.
+For response style plots, interpret trends as hypotheses about \(\hat{y}(x)\) rather than as proofs of causality. Smooth curves are included to reveal potential monotonic or threshold like patterns, while polynomial trends provide a controlled way to test curvature up to cubic behavior. In a one dimensional design, curvature is the main model choice dimension.
 
-## Contents In Each Variable Folder
-
-- **Histogram And Kernel Density**: a distribution overview with a smooth density curve.
-- **Box And Violin**: robust summaries of central tendency and spread. These are useful when the distribution is skewed or has heavy tails.
-- **Raincloud Plot**: a compact combined view that overlays a violin density, a box summary, and a jittered strip of points to reveal discrete stacking.
-- **Empirical Cumulative Distribution**: a marker free line style cumulative distribution with a shaded area under the curve.
-- **Scaling Comparison Density**: a multi scaler comparison that overlays density curves for Original Scale, Standard Scale, Min Max Scale, Robust Scale, Max Abs Scale, Quantile Normal Scale, Quantile Uniform Scale, and Power Yeo Johnson Scale.
-
-## Style Guarantees
-
-All plots in this directory use the PERO dark background, major and minor grids, smoothed lines for curve style plots, and shaded areas where appropriate. Legends are placed outside the axes region when multiple curves are present so that the distribution shapes remain readable. Plot text avoids parentheses and uses Title Case. Mathematical notation uses LaTeX style mathtext where it improves scientific clarity.
+All plot text follows a strict formatting rule to avoid parentheses and to keep labels in Title Case. Mathematical terms use LaTeX style mathtext when it improves scientific clarity, such as \(R_{\mathrm{ct}}\) and \(Q_{\mathrm{rev}}\). This keeps the visuals both professional and mathematically correct without requiring a full LaTeX installation.
