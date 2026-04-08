@@ -2,7 +2,7 @@
 
 ## Notation
 
-Let $x \in \mathbb{R}_{\ge 0}$ denote the single engineered input (Al₂O₃ thickness, nm). Targets form $\mathbf{y} = (y_1,\dots,y_4)^\top$ over the four electrochemical metrics named below. Each fitted model implements a map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ trained on the full tabulated sample; every scalar error metric is therefore **in-sample** unless stated otherwise.
+Let $x \in \mathbb{R}_{\ge 0}$ denote the single engineered input (Al₂O₃ thickness, nm), stored in the dataset as the column `Al2O3 Thickness_nm`. Targets form $\mathbf{y} = (y_1,\dots,y_4)^\top$ over the four electrochemical metrics named below. Each fitted model implements a map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ trained on the full tabulated sample; every scalar error metric is therefore **in-sample** unless stated otherwise.
 
 ## Data integrity snapshot
 - **Feature (only input)**: `Al2O3 Thickness_nm`
