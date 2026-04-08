@@ -187,11 +187,16 @@ def diagnostic_plots_per_target(
 
     # Predicted distribution vs actual distribution
     fig, ax = with_axes(figsize=(10, 6))
-    sns.kdeplot(y_true, ax=ax, linewidth=2.2, label="Actual")
-    sns.kdeplot(y_pred, ax=ax, linewidth=2.2, label="Predicted")
+    set_dark_background(fig, ax)
+    try:
+        sns.kdeplot(y_true, ax=ax, linewidth=2.2, label="Actual", warn_singular=False)
+        sns.kdeplot(y_pred, ax=ax, linewidth=2.2, label="Predicted", warn_singular=False)
+    except Exception:
+        ax.hist(y_true, bins=min(20, max(5, y_true.size // 2)), alpha=0.45, label="Actual", color="#5BC0EB")
+        ax.hist(y_pred, bins=min(20, max(5, y_pred.size // 2)), alpha=0.45, label="Predicted", color="#FF9F1C")
     ax.set_title(f"{target_title} Predicted And Actual Density")
     ax.set_xlabel(y_label)
-    ax.legend(loc="best")
+    legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, dist_dir, f"Predicted And Actual Density__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 

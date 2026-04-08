@@ -5,7 +5,9 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import ColumnSpec, RunConfig, get_paths
+from src.logging_config import configure_matplotlib_backends, setup_pipeline_logging
 from src.explainability import run_explainability
+from src.viz_style import apply_pero_theme
 from src.io_data import prepare_data
 from src.model_eval import rank_models
 from src.models import build_model_suite, fit_predict
@@ -15,9 +17,23 @@ from src.utils import ensure_dir, safe_filename, write_tables_excel
 
 def main() -> int:
     project_root = Path(__file__).parent
+    log = setup_pipeline_logging(project_root)
+    configure_matplotlib_backends()
+
     paths = get_paths(project_root)
     colspec = ColumnSpec()
     cfg = RunConfig()
+    try:
+        import seaborn as sns
+
+        from src.utils import set_global_plot_style
+
+        set_global_plot_style(sns, cfg)
+    except Exception:
+        log.debug("Seaborn theme setup skipped", exc_info=True)
+    apply_pero_theme(cfg)
+
+    log.info("Postprocess: loading metrics from %s", paths.models_tables)
 
     ensure_dir(paths.models_tables)
     ensure_dir(paths.explain_plots)
@@ -27,7 +43,9 @@ def main() -> int:
     # Load per-model metric CSVs created by run_all
     metric_files = sorted(paths.models_tables.glob("metrics__*.csv"))
     if not metric_files:
+        log.error("No metrics__*.csv files found under %s", paths.models_tables)
         raise FileNotFoundError("No metrics__*.csv files found. Run run_all.py first.")
+    log.debug("Found %s metric CSV files", len(metric_files))
 
     model_names: list[str] = []
     model_tables: list[pd.DataFrame] = []
@@ -75,7 +93,12 @@ def main() -> int:
         best_spec = suite[0]
 
     bundle = prepare_data(str(paths.data_xlsx), colspec=colspec)
-    fitted_best, _ = fit_predict(best_spec.estimator, bundle.X, bundle.Y)
+    log.info("Refitting best model for explainability: %s", best_overall_name)
+    try:
+        fitted_best, _ = fit_predict(best_spec.estimator, bundle.X, bundle.Y)
+    except Exception:
+        log.warning("Explainability base fit failed for %s", best_overall_name, exc_info=True)
+        raise
 
     run_explainability(
         model=fitted_best,
@@ -105,7 +128,7 @@ def main() -> int:
         ),
     )
 
-    print("Postprocess Completed", flush=True)
+    log.info("Postprocess completed successfully.")
     return 0
 
 

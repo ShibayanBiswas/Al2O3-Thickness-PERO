@@ -106,7 +106,7 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
                 Pipeline(
                     steps=[
                         ("scaler", StandardScaler()),
-                        ("sgd", SGDRegressor(loss="huber", random_state=random_seed, max_iter=5000, tol=1e-4)),
+                        ("sgd", SGDRegressor(loss="huber", random_state=random_seed, max_iter=50000, tol=1e-5)),
                     ]
                 )
             ),

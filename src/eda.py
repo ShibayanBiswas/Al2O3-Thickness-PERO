@@ -174,22 +174,27 @@ def run_deep_eda(
                 try:
                     from sklearn.preprocessing import MaxAbsScaler, PowerTransformer, QuantileTransformer, RobustScaler
 
+                    n_quantiles = min(1000, max(2, int(v.size)))
                     scalers["Robust Scale"] = RobustScaler().fit_transform(Xv).ravel()
                     scalers["Max Abs Scale"] = MaxAbsScaler().fit_transform(Xv).ravel()
-                    scalers["Quantile Normal Scale"] = QuantileTransformer(output_distribution="normal", random_state=cfg.random_seed).fit_transform(Xv).ravel()
-                    scalers["Quantile Uniform Scale"] = QuantileTransformer(output_distribution="uniform", random_state=cfg.random_seed).fit_transform(Xv).ravel()
+                    scalers["Quantile Normal Scale"] = QuantileTransformer(
+                        output_distribution="normal", n_quantiles=n_quantiles, random_state=cfg.random_seed
+                    ).fit_transform(Xv).ravel()
+                    scalers["Quantile Uniform Scale"] = QuantileTransformer(
+                        output_distribution="uniform", n_quantiles=n_quantiles, random_state=cfg.random_seed
+                    ).fit_transform(Xv).ravel()
                     scalers["Power Yeo Johnson Scale"] = PowerTransformer(method="yeo-johnson", standardize=True).fit_transform(Xv).ravel()
                 except Exception:
                     scalers = {}
                 fig, ax = with_axes(figsize=(10, 5))
                 set_dark_background(fig, ax)
-                sns.kdeplot(v, ax=ax, linewidth=2.8, label="Original Scale", color="#5BC0EB")
-                sns.kdeplot(z, ax=ax, linewidth=2.8, label="Standard Scale", color="#9FD356")
-                sns.kdeplot(mm, ax=ax, linewidth=2.8, label="Min Max Scale", color="#FF9F1C")
+                sns.kdeplot(v, ax=ax, linewidth=2.8, label="Original Scale", color="#5BC0EB", warn_singular=False)
+                sns.kdeplot(z, ax=ax, linewidth=2.8, label="Standard Scale", color="#9FD356", warn_singular=False)
+                sns.kdeplot(mm, ax=ax, linewidth=2.8, label="Min Max Scale", color="#FF9F1C", warn_singular=False)
                 palette = ["#5E2BFF", "#F7B801", "#D7263D", "#1B998B", "#C17CFF"]
                 for (lab, arr), col in zip(scalers.items(), palette, strict=False):
                     try:
-                        sns.kdeplot(arr, ax=ax, linewidth=2.4, label=lab, color=col)
+                        sns.kdeplot(arr, ax=ax, linewidth=2.4, label=lab, color=col, warn_singular=False)
                     except Exception:
                         continue
                 ax.set_title(f"{title} Scaling Comparison Density")

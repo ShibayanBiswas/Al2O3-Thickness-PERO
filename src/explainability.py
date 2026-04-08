@@ -25,8 +25,7 @@ def permutation_importance_single_feature(
     random_seed: int,
     n_repeats: int = 200,
 ) -> pd.DataFrame:
-    from sklearn.inspection import permutation_importance
-    from sklearn.metrics import r2_score, make_scorer
+    from sklearn.metrics import r2_score
 
     # For multi-output, permutation_importance uses estimator.score by default.
     # We implement per-target via wrappers: compute importance for each target with a single-output model if needed.
@@ -42,7 +41,8 @@ def permutation_importance_single_feature(
     for rep in range(n_repeats):
         X_perm = Xv.copy()
         rng.shuffle(X_perm[:, 0])
-        pred_perm = model.predict(X_perm)
+        X_perm_df = pd.DataFrame(X_perm, columns=X.columns, index=X.index)
+        pred_perm = model.predict(X_perm_df)
         pred_perm = np.asarray(pred_perm, dtype=float)
         r2_perm = [float(r2_score(Yv[:, j], pred_perm[:, j])) for j in range(Yv.shape[1])]
         drops = [base_r2[j] - r2_perm[j] for j in range(len(y_cols))]

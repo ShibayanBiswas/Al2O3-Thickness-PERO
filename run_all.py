@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -16,11 +15,15 @@ from src.model_eval import compute_metrics_per_target, rank_models, summarize_ov
 from src.models import build_model_suite, fit_predict
 from src.report import ReportInputs, write_summary_report_md
 from src.utils import ensure_dir, safe_filename, set_global_plot_style, write_tables_excel
+from src.logging_config import configure_matplotlib_backends, setup_pipeline_logging
 from src.viz_style import apply_pero_theme
 
 
 def main() -> int:
     project_root = Path(__file__).parent
+    log = setup_pipeline_logging(project_root)
+    configure_matplotlib_backends()
+
     paths = get_paths(project_root)
     colspec = ColumnSpec()
     cfg = RunConfig()
@@ -273,7 +276,7 @@ def main() -> int:
 
     bundle = prepare_data(str(paths.data_xlsx), colspec=colspec)
     df = bundle.df
-    print("Data Loaded And Validated", flush=True)
+    log.info("Data loaded and validated: shape=%s x_col=%s targets=%s", df.shape, bundle.x_col, len(bundle.y_cols))
 
     # Data audit
     audit = audit_dataset(df, x_col=bundle.x_col)
@@ -291,7 +294,7 @@ def main() -> int:
     )
 
     # 2) Deep EDA
-    print("Deep Exploratory Analysis Started", flush=True)
+    log.info("Deep exploratory analysis started")
     eda_art = run_deep_eda(
         df=df,
         x_col=bundle.x_col,
@@ -300,13 +303,13 @@ def main() -> int:
         out_tables=paths.eda_tables,
         cfg=cfg,
     )
-    print("Deep Exploratory Analysis Completed", flush=True)
+    log.info("Deep exploratory analysis completed")
 
     # 3) Modeling (full-data fit)
     X = bundle.X
     Y = bundle.Y
     model_suite = build_model_suite(random_seed=cfg.random_seed)
-    print("Model Fitting And Diagnostics Started", flush=True)
+    log.info("Model fitting started: %s candidate models", len(model_suite))
 
     all_metric_tables = []
     model_names = []
@@ -314,10 +317,10 @@ def main() -> int:
 
     for ms in model_suite:
         try:
-            print(f"Fitting Model {ms.name}", flush=True)
+            log.info("Fitting model: %s", ms.name)
             fitted, pred = fit_predict(ms.estimator, X, Y)
         except Exception:
-            # Skip models that fail on this environment/dataset
+            log.warning("Model skipped after fit failure: %s", ms.name, exc_info=True)
             continue
 
         per_target, metrics_tbl = compute_metrics_per_target(
@@ -347,13 +350,14 @@ def main() -> int:
                 out_dir=paths.models_diagnostics_plots / safe_filename(ms.name) / safe_filename(t),
                 cfg=cfg,
             )
-    print("Model Fitting And Diagnostics Completed", flush=True)
+    log.info("Model fitting completed: %s models succeeded", len(all_metric_tables))
 
     if not all_metric_tables:
+        log.error("No models produced metrics.")
         raise RuntimeError("No models could be fit successfully. Please ensure scikit-learn is installed correctly.")
 
     # Model comparison table
-    print("Model Comparison And Selection Started", flush=True)
+    log.info("Model comparison and selection")
     comp = rank_models(all_metric_tables, model_names=model_names)
     comp.to_csv(paths.models_tables / "model_comparison_overall.csv", index=False)
     consolidated_model_comparison_plot(comp, out_dir=paths.models_diagnostics_plots, cfg=cfg)
@@ -386,7 +390,7 @@ def main() -> int:
     fitted_best, pred_best = fit_predict(best_spec.estimator, X, Y)
 
     # 5) Explainability
-    print("Explainability Started", flush=True)
+    log.info("Explainability started; best overall=%s", best_overall_name)
     run_explainability(
         model=fitted_best,
         X=X,
@@ -396,7 +400,7 @@ def main() -> int:
         out_tables=paths.explain_tables,
         cfg=cfg,
     )
-    print("Explainability Completed", flush=True)
+    log.info("Explainability completed")
 
     # Export modeling tables to a single Excel
     sheets = {"model_comparison_overall": comp, "best_model_per_target": best_per_target}
@@ -422,15 +426,14 @@ def main() -> int:
             zero_vs_nonzero=zero_vs_nonzero,
         ),
     )
-    print("Summary Report Written", flush=True)
+    log.info("Summary report written: %s", paths.reports_root / "summary_report.md")
 
-    # Print compact progress pointers (console)
-    print("DONE.")
-    print(f"Outputs root: {paths.outputs_root}")
-    print(f"EDA plots: {paths.eda_plots}")
-    print(f"Model diagnostics plots: {paths.models_diagnostics_plots}")
-    print(f"Explainability plots: {paths.explain_plots}")
-    print(f"Summary report: {paths.reports_root / 'summary_report.md'}")
+    log.info("Pipeline finished OK.")
+    log.info("Outputs root: %s", paths.outputs_root)
+    log.info("EDA plots: %s", paths.eda_plots)
+    log.info("Model diagnostics plots: %s", paths.models_diagnostics_plots)
+    log.info("Explainability plots: %s", paths.explain_plots)
+    log.info("Debug log file: %s", project_root / "logs" / "pipeline.log")
     return 0
 
 
