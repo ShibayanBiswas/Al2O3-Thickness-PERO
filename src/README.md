@@ -1,25 +1,49 @@
-# Source Code Index
+# Source Code — Architecture & Symbol Discipline
 
-This directory contains all reusable Python modules for the PERO style analysis. The design goal is modularity and reproducibility: each module has a well defined responsibility, and the end to end pipeline in `run_all.py` composes these modules without duplicating logic. The project uses a single feature design, so the code avoids inventing additional physical features and restricts any engineered transformations to mathematically derived forms of thickness.
+Composable Python modules implement the full **single-input / multi-output** statistical narrative. `run_all.py` orchestrates them; nothing business-critical is hidden in notebooks.
 
-The architecture separates data integrity work from visualization and modeling work. Data loading and validation are handled once at the beginning of the pipeline so that all downstream analysis operates on a clean numeric dataframe with known column semantics. Plotting code is centralized so that styling, export behavior, and naming rules remain consistent across hundreds of figures and many tables.
+---
 
-The modeling stack is built for multi output regression with a single input feature. Estimators that do not support multi output natively are wrapped so that a single fit call yields predictions for all targets. Where scaling is required for numerical stability or distance based behavior, a Standard Scaler stage is applied in a pipeline so that the workflow is robust and reproducible.
+## Why the split matters
 
-Mathematical notation is rendered using LaTeX style mathtext where it improves scientific clarity. For example charge transfer resistance is represented as \(R_{\mathrm{ct}}\), and reversible capacity is represented as \(Q_{\mathrm{rev}}\). This improves readability without requiring an external LaTeX installation and ensures consistent symbol formatting across all exported figures.
+1. **Integrity layer** — ingest, dtype enforcement, validation (`io_data`, `audit`).
+2. **Exploration layer** — distributional + cohort geometry of $(x, \mathbf{y})$ (`eda`).
+3. **Inference layer** — regressors $\hat{\mathbf{f}}$, metrics, diagnostics (`models`, `model_eval`, `diagnostics`).
+4. **Interpretation layer** — PDP/ICE/sensitivity/SHAP when supported (`explainability`).
+5. **Communication layer** — Markdown + tabular synthesis (`report`, `plots`, `viz_style`).
 
-## Module Inventory
+This separation keeps each stage testable and lets you regen figures without rereading raw Excel ad hoc.
 
-- **`config.py`**: Project paths, column specification, and run configuration parameters.
-- **`io_data.py`**: Excel loading from the correct sheet, strict numeric coercion, and integrity validation.
-- **`audit.py`**: Data audit table construction and thickness value concentration summaries.
-- **`viz_style.py`**: Global PERO style and axis polish helpers.
-- **`plots.py`**: Figure creation and saving helpers with consistent export behavior.
-- **`eda.py`**: Deep EDA plots and tables, including raincloud plots and scaling comparison views.
-- **`models.py`**: Model suite for multi output regression with scaling where appropriate.
-- **`model_eval.py`**: Metric computation per target and overall model ranking.
-- **`diagnostics.py`**: In sample diagnostics exported into calibration, residual, and distribution subfolders.
-- **`explainability.py`**: Permutation importance, PDP and ICE, sensitivity curves, and SHAP exports when compatible.
-- **`report.py`**: Summary report generator and Markdown table formatting utilities.
-- **`utils.py`**: Filenames, robust statistics helpers, and Excel export helpers.
+---
 
+## Notation bridges code ↔ paper
+
+| Concept | Symbol (docs / GitHub Markdown) | Figure labels |
+| --- | --- | --- |
+| Thickness | $x$ (nm) | `Al2O3 Thickness_nm` |
+| Predicted response | $\hat{y}_j(x)$ or $\hat{\mathbf{y}}(x)$ | Matplotlib mathtext |
+| Charge-transfer resistance narrative | $R_{\mathrm{ct}}$ | Same |
+| Reversible capacity narrative | $Q_{\mathrm{rev}}$ | Same |
+| Goodness-of-fit (in-sample) | $R^2$ | Text metric tables |
+
+Repository Markdown intentionally uses `$...$` so math renders on GitHub; exported PNG/SVG rely on matplotlib’s mathtext interpreter (no external LaTeX required).
+
+---
+
+## Module inventory
+
+| Module | Responsibility |
+| --- | --- |
+| **`config.py`** | Paths, column spec, run settings, plotting DPI/theme hooks |
+| **`io_data.py`** | Excel read (sheet-locked), coercion, validation |
+| **`audit.py`** | Compact audit frames + thickness histogram of duplicates |
+| **`viz_style.py`** | PERO rcParams, axis polish, legend placement |
+| **`plots.py`** | Save helpers + annotation utilities |
+| **`eda.py`** | Deep EDA figure+table suite |
+| **`models.py`** | Estimator zoo + multi-output wrappers / scaling |
+| **`model_eval.py`** | Per-target metrics + leaderboards |
+| **`diagnostics.py`** | Residual & calibration geometry per model/target |
+| **`explainability.py`** | Permutation drops in $R^2$, PDP/ICE/slope/SHAP |
+| **`report.py`** | `summary_report.md` assembly |
+| **`logging_config.py`** | Structured logging + warning hygiene |
+| **`utils.py`** | Filename safety, robust stats, Excel bundling |

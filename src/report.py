@@ -58,7 +58,15 @@ def write_summary_report_md(out_path: Path, ri: ReportInputs) -> None:
     ensure_dir(out_path.parent)
 
     lines: list[str] = []
-    lines.append("# PERO Summary Report: Al2O3 thickness → multi-output response")
+    lines.append("# PERO Summary Report: Al₂O₃ thickness → multi-output response")
+    lines.append("")
+    lines.append("## Notation")
+    lines.append("")
+    lines.append(
+        "Let $x \\in \\mathbb{R}_{\\ge 0}$ denote the single engineered input (Al₂O₃ thickness, nm). "
+        "Targets form $\\mathbf{y} = (y_1,\\dots,y_4)^\\top$ over the four electrochemical metrics named below. "
+        "Each fitted model implements a map $\\hat{\\mathbf{f}} : x \\mapsto \\widehat{\\mathbf{y}}$ trained on the full tabulated sample; every scalar error metric is therefore **in-sample** unless stated otherwise."
+    )
     lines.append("")
     lines.append("## Data integrity snapshot")
     lines.append(f"- **Feature (only input)**: `{ri.x_col}`")
@@ -104,8 +112,18 @@ def write_summary_report_md(out_path: Path, ri: ReportInputs) -> None:
     lines.append("")
 
     lines.append("## Scientific interpretation (1D thickness-response)")
-    lines.append("Because the feature space is one-dimensional, model flexibility mainly controls whether the relationship is treated as **linear**, **smoothly nonlinear**, or **piecewise/threshold-like**.")
-    lines.append("Use the exported plots in `outputs/eda/plots/` and `outputs/models/diagnostics_plots/` to judge whether residual structure remains versus thickness (a sign the chosen model family is too rigid).")
+    lines.append("")
+    lines.append(
+        "With $p=1$, estimator flexibility governs how $\\mathbb{E}[Y_j \\mid x]$ is approximated: **affine**, "
+        "**smooth nonlinear** ($\\hat{y}_j \\in C^k$ for low $k$), or **threshold / cohort-segmented** behavior at the discrete support of $x$. "
+        "In-sample $R^2$ can rise via interpolation of thickness cohorts; the decisive diagnostic is residual structure **vs.** $x$ "
+        "and the plausibility of $\\mathrm{d}\\hat{y}_j/\\mathrm{d}x$ on the nm axis."
+    )
+    lines.append("")
+    lines.append(
+        "Consult `outputs/eda/plots/` and `outputs/models/diagnostics_plots/` for overlap-aware scatter, parity lines, "
+        "and residual sweeps keyed to thickness."
+    )
     lines.append("")
 
     out_path.write_text("\n".join(lines), encoding="utf-8")

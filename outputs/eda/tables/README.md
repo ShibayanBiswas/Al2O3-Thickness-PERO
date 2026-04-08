@@ -1,9 +1,9 @@
 # Exploratory Tables Index
 
-This tables directory contains export ready CSV and Excel outputs that support the EDA narrative. The tables are designed to be compact but complete, allowing direct insertion into a manuscript or appendix. Because the dataset is small, these tables provide transparent visibility into value ranges and thickness level balance.
+Numeric companion to the figure tree: CSV + XLSX tables that tabulate the empirical law of $x$ (thickness) and the joint law of $(x, Y_j)$. Each frame is sized for thesis appendices—dense but legible, with moments that behave well under heavy tails.
 
-The data audit tables provide dtype verification, missingness confirmation, unique counts, and both classical and robust summary statistics. Robust summaries include median and interquartile range, which are helpful when a few extreme points exist. Thickness value counts explicitly quantify how much mass sits at the zero thickness level, which is central to interpreting all downstream trends.
+Data audits enumerate dtypes, missingness, cardinalities, medians, and IQRs. Thickness frequency tables quantify the atom at $x=0$ versus sparse nonzero nm levels—the single most important structural fact for every downstream statistic.
 
-Grouped summary tables report thickness cohort statistics across all targets, including count, mean, median, standard deviation, and extrema. These tables are the backbone of discrete level comparison and are especially important when scatter plots contain heavy overlap. A separate comparison table contrasts the zero thickness cohort against the pooled non zero cohort as a diagnostic of threshold like behavior.
+Cohort summaries stratify by each observed $x$: $n$, $\bar Y_j$, $\mathrm{median}(Y_j)$, $s$, and extrema. A pooled contrast (`0` nm vs. $\{x > 0\}$) formalizes threshold narratives without asserting causality.
 
-Correlation tables are provided for Pearson and Spearman metrics. In a discrete one dimensional setting, these are treated as descriptive diagnostics rather than definitive claims. Use them alongside the plots and the grouped tables to form a consistent scientific interpretation of thickness response behavior.
+Bivariate summaries list Pearson $\rho$ and Spearman $r_s$ between $x$ and each $Y_j$. In this quasi-factorial 1D design they are **descriptive** alignment scores, not substitutes for inspecting $\mathbb{E}[Y_j \mid x]$ nonlinearity.

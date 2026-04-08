@@ -1,0 +1,6 @@
+role,name
+feature,Al2O3 Thickness_nm
+target,Rct_initial_ohm
+target,ICE_percent
+target,Initial Reversible Capacity_mAh_g at 0.1C
+target,Highest Capacity Retention_percent

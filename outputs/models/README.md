@@ -1,6 +1,6 @@
 # Modeling Outputs And Diagnostics
 
-This directory contains multi output regression models that map thickness to four targets. All models are fitted on the full dataset by requirement, meaning every metric and every diagnostic plot is an in sample fit diagnostic. This is appropriate for a tiny dataset where reserving a holdout set would reduce already limited information, but it also means performance values should be interpreted as calibration of fit rather than guaranteed out of sample accuracy.
+This directory stores **multi-output regressors** $ \hat{\mathbf{y}}(x) \in \mathbb{R}^4 $ fitted on the full sample (no routine holdout), per project specification. Consequently every $R^2$, MAE, or RMSE is an **in-sample** adequacy measure—a check of how closely the learned map reproduces the given $ (x, \mathbf{y}) $ pairs—not a de novo generalization certificate.
 
 The **Tables** subdirectory includes per model per target error metrics such as mean absolute error, root mean squared error, and coefficient of determination, plus a compact overall comparison leaderboard created by averaging across targets. A separate selection table identifies the best model per target based on error ranking. The Excel export consolidates all metric tables into a single workbook for easy reporting and cross checking.
 

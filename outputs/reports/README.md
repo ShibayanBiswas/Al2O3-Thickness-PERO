@@ -6,4 +6,4 @@ The main artifact is the summary report in Markdown format, which consolidates t
 
 When interpreting results, the report highlights the discrete nature of thickness and the heavy concentration at zero thickness. This structure can create apparent step changes that are really group differences rather than smooth continuous trends. The report therefore encourages using grouped summaries, uncertainty bands, and residual structure plots to judge whether observed patterns are robust within thickness levels.
 
-Mathematical notation is expressed using LaTeX style mathtext such as \(R_{\mathrm{ct}}\) and \(Q_{\mathrm{rev}}\) when appropriate, while keeping the prose in consistent Title Case headings. The intention is a PERO style deliverable: polished, export ready, reproducible, and organized so that every plot and table has a clear home and a clear purpose.
+Notational hygiene: Markdown uses `$...$` / `$$...$$` for GitHub; figures lean on Matplotlib mathtext ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc.). Headings stay Title Case. **PERO** means polished, export-ready, reproducible, organized—each artifact with a named place and a stated inferential role.

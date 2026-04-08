@@ -1,14 +1,33 @@
 # Data Directory
 
-This directory contains the single authoritative dataset used by the analysis. The pipeline is intentionally strict about data provenance and will only read the Excel file from this location. This ensures that results are reproducible and that accidental copies of the workbook do not silently change the analysis.
+Authoritative data live here so provenance never forks silently. The pipeline reads **exactly one** workbook path and refuses to improvise alternates—reproducibility beats convenience.
 
-The workbook is expected to contain a sheet named `Dataset`, which is treated as the only real data source. The code ignores any accidental header like content in other sheets and it ignores the `Sample` column completely so that the analysis remains a single feature regression study. The feature used is thickness, and all other specified numeric columns are treated strictly as targets.
+---
 
-The dataset is small and thickness values are discrete with a heavy concentration at the zero thickness level. This structure is important for interpretation because it can create visual overlap and cohort like behavior rather than a smooth continuous design. The analysis therefore includes grouped thickness cohort plots and uncertainty bands to respect the true structure of the dataset.
+## Design & measurement model (conceptual)
 
-All numeric values are coerced with strict typing rules and validated for missingness. If the file contents change in a way that violates the expected schema, the pipeline will raise an informative error rather than continuing with incorrect assumptions. This makes the PERO style deliverable robust for research workflows.
+Rows index experimental cells; columns hold **one** controlled continuous nominal input—alumina thickness $x\ge 0$ (nm)—plus four **downstream electrochemical readouts** modeled as
+
+$$
+y_j = f_j(x) + \varepsilon_j,\quad j=1,\dots,4,
+$$
+
+with unknown smooth or threshold-like $f_j$ and cell-level noise $\varepsilon_j$. The tabulation is sparse in $x$: many replicate specimens share identical thickness, so **cohort structure** dominates naive “continuous regression” intuition.
+
+---
+
+## Structural facts every analyst should internalize
+
+- **Sheet rule:** only `Dataset` is ingested; other sheets are ignored by construction.
+- **Identifier column `Sample`:** deliberately dropped so inference cannot smuggle hidden covariates through label leakage.
+- **Discrete support:** mass concentrates at $x=0$ nm with a long tail of sparse nonzero levels—EDA therefore emphasizes grouped means, ribbons, and overlap-aware scatter rather than a single Pearson coefficient.
+
+Strict numeric coercion and schema checks fail fast if headers drift. That harshness is deliberate: **PERO** outputs should remain litigation-grade for thesis committees.
+
+---
 
 ## Files
 
-- **`Data.xlsx`**: The dataset workbook. The analysis uses only the `Dataset` sheet.
-
+| File | Role |
+| --- | --- |
+| **`Data.xlsx`** | Canonical multi-sheet workbook; analysis consumes `Dataset` only |

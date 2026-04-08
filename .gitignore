@@ -1,10 +1,7 @@
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
-outputs/**
-!outputs/**/
-!outputs/**/README.md
-!outputs/**/summary_report.md
+# outputs/ is versioned so plots, tables, and reports ship with the repo
 catboost_info/
 .DS_Store
 Thumbs.db

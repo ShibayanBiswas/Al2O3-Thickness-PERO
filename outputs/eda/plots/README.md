@@ -1,6 +1,6 @@
 # Exploratory Plots Index
 
-This plots directory is the visual record of the one dimensional thickness response study. All figures are saved at high resolution using a unified PERO theme that emphasizes contrast, consistent typography, and careful grid treatment. The dataset contains repeated thickness levels, so many plots are designed to reveal overlap and to separate within level variability from between level differences.
+This plots directory is the visual record of a controlled **1D response surface** study: one continuous nominal input (thickness) against four outputs. Figures are high-resolution exports under a single PERO visual system—contrast, type rhythm, and grid discipline held constant. Because many specimens share the same $x$, jitter, cohort strips, and transparency encode overlap rather than hiding it.
 
 The **Univariate** subdirectory contains distribution focused plots for the thickness feature and each target. These include histograms with smooth density overlays, empirical cumulative distribution curves, and robust shape summaries such as box and violin views. The purpose is to understand skewness, tail weight, and whether a small number of extreme observations dominate apparent trends.
 
