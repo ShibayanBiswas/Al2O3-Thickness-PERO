@@ -18,6 +18,7 @@ from src.utils import ensure_dir, safe_filename, set_global_plot_style, write_ta
 from src.logging_config import configure_matplotlib_backends, setup_pipeline_logging
 from src.viz_style import apply_pero_theme
 from src.output_readmes import write_output_readme_files
+from src.plot_notes import write_plot_notes
 
 
 def main() -> int:
@@ -219,6 +220,13 @@ def main() -> int:
         ),
     )
     log.info("Summary report written: %s", paths.reports_root / "summary_report.md")
+
+    # 8) Plot notes (per-folder interpretation guides)
+    try:
+        written = write_plot_notes(paths.outputs_root)
+        log.info("Plot notes written: %s files", len(written))
+    except Exception:
+        log.warning("Plot notes writer failed", exc_info=True)
 
     log.info("Pipeline finished OK.")
     log.info("Outputs root: %s", paths.outputs_root)
