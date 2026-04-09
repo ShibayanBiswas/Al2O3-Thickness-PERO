@@ -63,7 +63,7 @@ def scatter_with_marginals(
 
         # Top: x distribution
         sns.histplot(x, ax=ax_top, stat="density", kde=False, bins="auto", alpha=0.25)
-        sns.kdeplot(x, ax=ax_top, linewidth=2.2, warn_singular=False)
+        sns.kdeplot(x, ax=ax_top, linewidth=1.4, warn_singular=False)
         try:
             sns.rugplot(x, ax=ax_top, height=0.08, alpha=0.25)
         except Exception:
@@ -71,7 +71,7 @@ def scatter_with_marginals(
 
         # Right: y distribution (horizontal)
         sns.histplot(y=y, ax=ax_right, stat="density", kde=False, bins="auto", orientation="horizontal", alpha=0.25)
-        sns.kdeplot(y=y, ax=ax_right, linewidth=2.2, warn_singular=False)
+        sns.kdeplot(y=y, ax=ax_right, linewidth=1.4, warn_singular=False)
         try:
             sns.rugplot(y, ax=ax_right, height=0.08, alpha=0.25)
         except Exception:

@@ -122,7 +122,7 @@ def shap_explain_1d_single_output(
         try:
             order = np.argsort(xvals)
             s_ord = smooth_curve_1d(svals[order])
-            ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=2.1, label="Smoothed Trend")
+            ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=1.6, label="Smoothed Trend")
             ax.fill_between(
                 xvals[order], s_ord - np.nanstd(svals), s_ord + np.nanstd(svals), color=PERO.orange, alpha=0.08, label="Trend Band"
             )
@@ -193,7 +193,7 @@ def shap_explain_1d_single_output(
         ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
 
         s_ord = smooth_curve_1d(svals[order])
-        ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=2.1, label="Smoothed Trend")
+        ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=1.6, label="Smoothed Trend")
         ax.fill_between(
             xvals[order],
             s_ord - np.nanstd(svals),
@@ -258,7 +258,7 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
             ax.plot(x_grid, q90s, color=PERO.text, linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Upper Boundary")
 
         pdp_line = smooth_curve_1d(Yg[:, j])
-        ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=2.2, label="Partial Dependence")
+        ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=1.6, label="Partial Dependence")
         span = float(np.nanmax(pdp_line) - np.nanmin(pdp_line) + 1e-9)
         y_floor = float(np.nanmin(pdp_line) - 0.04 * span)
         ax.fill_between(x_grid, y_floor, pdp_line, color=PERO.sky, alpha=0.07, label="Response Area")
@@ -364,7 +364,7 @@ def local_sensitivity_curve(
             ax.plot(x_grid, q10_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Lower")
             ax.plot(x_grid, q90_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Upper")
 
-        ax.plot(x_grid, yg_s, linewidth=2.2, color=PERO.sky, label="Predicted Response")
+        ax.plot(x_grid, yg_s, linewidth=1.6, color=PERO.sky, label="Predicted Response")
         span_y = float(np.nanmax(yg_s) - np.nanmin(yg_s) + 1e-9)
         y_lo_fill = float(np.nanmin(yg_s) - 0.04 * span_y)
         ax.fill_between(x_grid, y_lo_fill, yg_s, color=PERO.sky, alpha=0.08, label="Response Fill")
@@ -375,7 +375,7 @@ def local_sensitivity_curve(
 
         # Slope panel with shaded magnitude band
         axs.fill_between(x_grid, 0, dydx_s, color=PERO.red, alpha=0.12, label="Slope Area")
-        axs.plot(x_grid, dydx_s, linewidth=2.0, color=PERO.red, label="Local Slope")
+        axs.plot(x_grid, dydx_s, linewidth=1.5, color=PERO.red, label="Local Slope")
         sspan = float(np.nanmax(dydx_s) - np.nanmin(dydx_s) + 1e-12)
         axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color=PERO.red, alpha=0.06, label="Slope Band")
         axs.set_xlabel(labels.x_label)

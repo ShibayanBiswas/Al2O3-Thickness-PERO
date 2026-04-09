@@ -138,9 +138,9 @@ def apply_pero_theme(cfg: object) -> None:
             "legend.shadow": False,
             "legend.borderpad": 0.5,
             "legend.labelspacing": 0.55,
-            # Slightly thinner strokes for a cleaner scientific feel.
-            "lines.linewidth": 1.85,
-            "lines.markersize": 6.6,
+            # Thin, fine strokes (user requirement).
+            "lines.linewidth": 1.35,
+            "lines.markersize": 6.0,
             "lines.antialiased": True,
             "patch.edgecolor": p.ink,
             "patch.linewidth": 0.75,

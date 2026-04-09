@@ -119,7 +119,7 @@ def run_deep_eda(
         fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
         sns.histplot(vals, stat="density", kde=False, ax=ax, color=PERO.sky, edgecolor=PERO.ink, alpha=0.88, label="Histogram")
-        sns.kdeplot(vals, ax=ax, color=PERO.orange, linewidth=2.0, warn_singular=False, label="Kernel density")
+        sns.kdeplot(vals, ax=ax, color=PERO.orange, linewidth=1.4, warn_singular=False, label="Kernel density")
         ax.set_title(f"{title} Distribution")
         ax.set_xlabel(display)
         ax.set_ylabel("Density")
@@ -190,7 +190,7 @@ def run_deep_eda(
         set_dark_background(fig, ax)
         y_ecdf_s = smooth_curve_1d(y_ecdf) if x_ecdf.size >= 3 else y_ecdf
         ax.fill_between(x_ecdf, 0, y_ecdf_s, alpha=0.12, color=PERO.gold, label="Cumulative Area")
-        ax.plot(x_ecdf, y_ecdf_s, linestyle="-", alpha=0.92, linewidth=2.0, color=PERO.gold, label="Smoothed ECDF")
+        ax.plot(x_ecdf, y_ecdf_s, linestyle="-", alpha=0.92, linewidth=1.5, color=PERO.gold, label="Smoothed ECDF")
         ax.set_title(f"{title} Empirical Cumulative Distribution")
         ax.set_xlabel(display)
         ax.set_ylabel("Cumulative Probability")
@@ -224,13 +224,13 @@ def run_deep_eda(
                     scalers = {}
                 fig, ax = with_axes(figsize=(7.5, 7.5))
                 set_dark_background(fig, ax)
-                sns.kdeplot(v, ax=ax, linewidth=2.0, label="Original Scale", color=PERO.sky, warn_singular=False)
-                sns.kdeplot(z, ax=ax, linewidth=2.0, label="Standard Scale", color=PERO.green, warn_singular=False)
-                sns.kdeplot(mm, ax=ax, linewidth=2.0, label="Min Max Scale", color=PERO.orange, warn_singular=False)
+                sns.kdeplot(v, ax=ax, linewidth=1.4, label="Original Scale", color=PERO.sky, warn_singular=False)
+                sns.kdeplot(z, ax=ax, linewidth=1.4, label="Standard Scale", color=PERO.green, warn_singular=False)
+                sns.kdeplot(mm, ax=ax, linewidth=1.4, label="Min Max Scale", color=PERO.orange, warn_singular=False)
                 palette = PERO.multiline_series()
                 for (lab, arr), col in zip(scalers.items(), palette, strict=False):
                     try:
-                        sns.kdeplot(arr, ax=ax, linewidth=2.4, label=lab, color=col, warn_singular=False)
+                        sns.kdeplot(arr, ax=ax, linewidth=1.6, label=lab, color=col, warn_singular=False)
                     except Exception:
                         continue
                 ax.set_title(f"{title} Scaling Comparison Density")
@@ -292,7 +292,7 @@ def run_deep_eda(
             q50s = smooth_curve_1d(q50[order])
             gxo = gx[order]
             ax.fill_between(gxo, q25s, q75s, color=PERO.text, alpha=0.08, label="Interquartile Band")
-            ax.plot(gxo, q50s, color=PERO.green, linewidth=2.0, label="Median By Thickness")
+            ax.plot(gxo, q50s, color=PERO.green, linewidth=1.6, label="Median By Thickness")
             ax.plot(gxo, q25s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Lower")
             ax.plot(gxo, q75s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Upper")
         except Exception:
@@ -310,7 +310,7 @@ def run_deep_eda(
         # Linear trend + residual band (in-sample)
         try:
             gx, gp = _polynomial_fit(x, yv, degree=1)
-            ax.plot(gx, gp, color=PERO.orange, linewidth=2.2, label="Linear Trend")
+            ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
             ax.fill_between(gx, y_lo - 0.02 * y_span, gp, color=PERO.orange, alpha=0.045, label="Linear Trend Area")
             pred_x = np.polyval(np.polyfit(x, yv, deg=1), x)
             resid = yv - pred_x
@@ -325,7 +325,7 @@ def run_deep_eda(
         # Cubic trend (shape probe) + residual band
         try:
             gx3, gp3 = _polynomial_fit(x, yv, degree=3)
-            ax.plot(gx3, gp3, color=PERO.teal, linewidth=2.0, alpha=0.95, label="Cubic Trend")
+            ax.plot(gx3, gp3, color=PERO.teal, linewidth=1.6, alpha=0.95, label="Cubic Trend")
             ax.fill_between(gx3, y_lo - 0.02 * y_span, gp3, color=PERO.teal, alpha=0.035, label="Cubic Trend Area")
             pred_x3 = np.polyval(np.polyfit(x, yv, deg=3), x)
             resid3 = yv - pred_x3
@@ -341,7 +341,7 @@ def run_deep_eda(
             try:
                 xl, yl = low
                 yl_s = smooth_curve_1d(yl)
-                ax.plot(xl, yl_s, color=PERO.gold, linewidth=2.1, alpha=0.9, label="Lowess Smoother")
+                ax.plot(xl, yl_s, color=PERO.gold, linewidth=1.6, alpha=0.9, label="Lowess Smoother")
                 ax.fill_between(xl, y_lo - 0.02 * y_span, yl_s, color=PERO.gold, alpha=0.03, label="Lowess Area")
             except Exception:
                 pass
@@ -368,7 +368,7 @@ def run_deep_eda(
         xs = x[order]
         ys = yv[order]
         ys_s = smooth_curve_1d(ys)
-        ax.plot(xs, ys_s, linewidth=2.1, color=PERO.sky, label="Smoothed Profile")
+        ax.plot(xs, ys_s, linewidth=1.6, color=PERO.sky, label="Smoothed Profile")
         span = float(np.nanmax(ys_s) - np.nanmin(ys_s) + 1e-9)
         y_floor = float(np.nanmin(ys_s) - 0.03 * span)
         ax.fill_between(xs, y_floor, ys_s, color=PERO.sky, alpha=0.08, label="Profile Area")
@@ -382,7 +382,7 @@ def run_deep_eda(
             q75s = smooth_curve_1d(q75)
             meds = smooth_curve_1d(med)
             ax.fill_between(xs, q25s, q75s, color=PERO.text, alpha=0.10, label="Interquartile Band")
-            ax.plot(xs, meds, color=PERO.green, linewidth=2.4, label="Rolling Median")
+            ax.plot(xs, meds, color=PERO.green, linewidth=1.6, label="Rolling Median")
             ax.plot(xs, q25s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Lower")
             ax.plot(xs, q75s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Upper")
         except Exception:
@@ -443,7 +443,7 @@ def run_deep_eda(
         lo_s = smooth_curve_1d(mu - sg)
         hi_s = smooth_curve_1d(mu + sg)
         ax.fill_between(gx, lo_s, hi_s, color=PERO.green, alpha=0.14, label="Uncertainty Band")
-        ax.plot(gx, mu_s, linestyle="-", linewidth=2.1, color=PERO.green, label="Mean Curve")
+        ax.plot(gx, mu_s, linestyle="-", linewidth=1.6, color=PERO.green, label="Mean Curve")
         ax.plot(gx, lo_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Lower Boundary")
         ax.plot(gx, hi_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Upper Boundary")
         ax.set_title(f"{y_title} Group Mean With Uncertainty")

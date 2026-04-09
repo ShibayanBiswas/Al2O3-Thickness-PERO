@@ -35,7 +35,7 @@ def qqplot_residuals(ax, residuals: np.ndarray, title: str) -> None:
             yref = slope * x + intercept
             yref_s = smooth_curve_1d(yref) if yref.size >= 5 else yref
             ax.fill_between(x, yref_s - 0.02 * np.nanstd(osr), yref_s + 0.02 * np.nanstd(osr), color=PERO.qq_ref, alpha=0.12, label="Reference Band")
-            ax.plot(x, yref_s, color=PERO.qq_ref, linewidth=2.4, label="Smoothed Reference")
+            ax.plot(x, yref_s, color=PERO.qq_ref, linewidth=1.5, label="Smoothed Reference")
             ax.set_title(title)
             ax.set_xlabel("Theoretical Quantiles")
             ax.set_ylabel("Ordered Residuals")
@@ -69,7 +69,7 @@ def qqplot_residuals(ax, residuals: np.ndarray, title: str) -> None:
                 linestyle="",
                 label="Empirical quantiles",
             ),
-            Line2D([0], [0], color=PERO.text, linestyle="--", linewidth=2.2, label="Theoretical normal reference"),
+            Line2D([0], [0], color=PERO.text, linestyle="--", linewidth=1.5, label="Theoretical normal reference"),
         ],
         title="QQ diagnostic",
     )
@@ -110,7 +110,7 @@ def diagnostic_plots_per_target(
     ax.scatter(y_true, y_pred, s=64, alpha=0.88, edgecolor=PERO.ink, linewidth=0.75, color=PERO.sky, label="In-sample pairs")
     lims = [float(min(y_true.min(), y_pred.min())), float(max(y_true.max(), y_pred.max()))]
     xs_p = np.linspace(lims[0], lims[1], 200)
-    ax.plot(xs_p, xs_p, linestyle="--", linewidth=2.2, color=PERO.text, alpha=0.9, label="Parity Reference")
+    ax.plot(xs_p, xs_p, linestyle="--", linewidth=1.5, color=PERO.text, alpha=0.9, label="Parity Reference")
     band = float(np.nanstd(resid, ddof=1)) if np.isfinite(np.nanstd(resid, ddof=1)) else 0.0
     if band > 0:
         ax.fill_between(xs_p, xs_p - band, xs_p + band, color=PERO.text, alpha=0.08, label="Parity Band")
@@ -165,7 +165,7 @@ def diagnostic_plots_per_target(
     fig, ax = with_axes(figsize=(7.5, 7.5))
     set_dark_background(fig, ax)
     sns.histplot(resid, stat="density", kde=False, ax=ax, color=PERO.sky, edgecolor=PERO.ink, alpha=0.88, label="Histogram")
-    sns.kdeplot(resid, ax=ax, color=PERO.orange, linewidth=2.45, warn_singular=False, label="Kernel density")
+    sns.kdeplot(resid, ax=ax, color=PERO.orange, linewidth=1.4, warn_singular=False, label="Kernel density")
     ax.set_title(f"{target_title} Residual Distribution")
     ax.set_xlabel(r"Residual $\hat\varepsilon$")
     ax.set_ylabel("Density")
@@ -217,8 +217,8 @@ def diagnostic_plots_per_target(
     lo = np.minimum(ya_s, yp_s)
     hi = np.maximum(ya_s, yp_s)
     ax.fill_between(idx, lo, hi, color=PERO.text, alpha=0.10, label="Between Curves Area")
-    ax.plot(idx, ya_s, label="Sorted Actual", linewidth=2.05, color=PERO.green)
-    ax.plot(idx, yp_s, label="Sorted Predicted", linewidth=2.05, color=PERO.sky)
+    ax.plot(idx, ya_s, label="Sorted Actual", linewidth=1.55, color=PERO.green)
+    ax.plot(idx, yp_s, label="Sorted Predicted", linewidth=1.55, color=PERO.sky)
     ax.set_title(f"{target_title} Sorted Actual And Predicted")
     ax.set_xlabel("Sorted Index")
     ax.set_ylabel(y_label)
@@ -230,8 +230,8 @@ def diagnostic_plots_per_target(
     fig, ax = with_axes(figsize=(7.5, 7.5))
     set_dark_background(fig, ax)
     try:
-        sns.kdeplot(y_true, ax=ax, linewidth=2.2, label="Actual", warn_singular=False)
-        sns.kdeplot(y_pred, ax=ax, linewidth=2.2, label="Predicted", warn_singular=False)
+        sns.kdeplot(y_true, ax=ax, linewidth=1.4, label="Actual", warn_singular=False)
+        sns.kdeplot(y_pred, ax=ax, linewidth=1.4, label="Predicted", warn_singular=False)
     except Exception:
         ax.hist(y_true, bins=min(20, max(5, y_true.size // 2)), alpha=0.45, label="Actual", color=PERO.sky)
         ax.hist(y_pred, bins=min(20, max(5, y_pred.size // 2)), alpha=0.45, label="Predicted", color=PERO.orange)
