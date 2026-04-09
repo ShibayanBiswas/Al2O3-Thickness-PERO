@@ -354,7 +354,7 @@ def run_deep_eda(
         except Exception:
             pass
 
-        annotate_extremes(ax, x, yv, n=2, label_fmt=lambda i, xi, yi: "Notable Point")
+        # User requirement: do not label individual points inside scatter plots.
         ax.set_title(f"{y_title} Versus Thickness")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
