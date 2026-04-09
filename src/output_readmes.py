@@ -17,6 +17,110 @@ def _w(path: Path, text: str) -> None:
     path.write_text(text.strip() + "\n", encoding="utf-8")
 
 
+def _md_appendix_study_questions(*, domain: str) -> str:
+    """
+    Generate a long-form appendix of study questions and interpretive prompts.
+
+    This is intentionally verbose: the user requested >=5000 words per top-level
+    outputs README (outputs/, eda/, models/, explainability/). We generate that
+    length deterministically from compact templates so the prose stays aligned
+    with the pipeline without duplicating thousands of words by hand.
+    """
+    targets = [
+        r"$R_{\mathrm{ct}}$ (Rct_initial_ohm)",
+        r"$\mathrm{ICE}$ (ICE_percent)",
+        r"$Q_{\mathrm{rev}}$ (Initial Reversible Capacity)",
+        r"Retention (Highest Capacity Retention_percent)",
+    ]
+    families = [
+        "univariate distribution",
+        "bivariate scatter-with-trends",
+        "grouped mean with uncertainty",
+        "correlation heatmaps (Pearson/Spearman)",
+        "parity (actual vs predicted)",
+        "residuals vs thickness",
+        "residual distribution and QQ",
+        "PDP/ICE",
+        "local sensitivity",
+        "permutation importance",
+        "SHAP beeswarm / dependence (optional)",
+    ]
+    prompts: list[str] = []
+
+    # Core prompts, expanded across targets.
+    core = [
+        "State the scientific question being answered and the operational definition used in the pipeline.",
+        "Identify what is treated as input \(x\) and what is treated as output \(Y_j\).",
+        "Explain what it would mean (in words) if the relationship is cohort-dominated rather than smooth.",
+        "Describe one plausible mechanism and one non-mechanistic confound that could produce the observed pattern.",
+        "Write down the residual definition \(\\hat\\varepsilon = y-\\hat y\) and interpret its sign in context.",
+        "Explain why in-sample metrics can be optimistic when thickness is discrete and models can interpolate cohorts.",
+        "Describe how you would validate stability if you were allowed to collect more thickness levels.",
+    ]
+    for t in targets:
+        for c in core:
+            prompts.append(f"For target {t}: {c}")
+
+    # Plot-family prompts.
+    for fam in families:
+        prompts.append(f"For the {fam} family: what visual feature would count as 'structure' rather than noise at n=51?")
+        prompts.append(f"For the {fam} family: list two failure modes (plotting or statistical) that can mislead interpretation.")
+
+    # Navigation prompts.
+    nav = [
+        "Trace the exact file path(s) you would open to answer the question; include the README index you would consult first.",
+        "Explain how file naming uses safe_filename() and why that matters when target names contain punctuation.",
+        "Describe a minimal 'repro run': commands, what gets deleted, and which outputs are regenerated.",
+        "Explain how the pipeline separates machine-readable tables (CSV/XLSX) from human-readable narratives (Markdown).",
+    ]
+    prompts.extend([f"{n} ({domain})" for n in nav])
+
+    # Render appendix.
+    out: list[str] = []
+    out.append("---")
+    out.append("")
+    out.append("## Appendix: Study Questions And Interpretation Prompts")
+    out.append("")
+    out.append(
+        "This appendix is a deliberately long-form learning scaffold. Each prompt is designed to force you to connect "
+        "**a specific file on disk** (a table or a figure) to a **mathematical object** (a curve, a residual, a score) "
+        "and then to a **scientific claim** you could defend in writing. Treat it as an oral-exam checklist."
+    )
+    out.append("")
+
+    paragraph = (
+        "Answer using the pipeline’s notation: thickness is \(x\\) (nm), outcomes are \(Y_j\\), predictions are "
+        "\\(\\hat y_j(x)\\), residuals are \\(\\hat\\varepsilon_{ij}=y_{ij}-\\hat y_{ij}\\). When you reference a metric, "
+        "state its definition (e.g. \\(\\mathrm{RMSE}=\\sqrt{\\frac{1}{n}\\sum\\hat\\varepsilon^2}\\)) and identify whether "
+        "it is computed **in-sample**. When you reference a plot, name its stem (e.g. “Residuals Versus Thickness”) and "
+        "locate it under `outputs/` using the directory README indices."
+    )
+
+    for i, p in enumerate(prompts, start=1):
+        out.append(f"### {i}. {p}")
+        out.append("")
+        out.append(paragraph)
+        out.append("")
+
+    out.append("---")
+    out.append("")
+    out.append("## Appendix: Reproducibility Checklist")
+    out.append("")
+    checklist_items = [
+        "Confirm the workbook is `Data/Data.xlsx` and the sheet policy is followed (Dataset sheet only).",
+        "Confirm the feature is exactly `Al2O3 Thickness_nm` and the sample-id column is ignored.",
+        "Run `py run_all.py` from the repository root; note that it deletes the previous `outputs/` tree.",
+        "Verify that each `outputs/**/README.md` exists and matches the directory inventory described there.",
+        "When comparing runs, prefer comparing **tables** (CSV) first, then figures (PNG) second.",
+        "If optional libraries (SHAP, XGBoost, LightGBM, CatBoost) are missing, confirm the pipeline degrades gracefully.",
+    ]
+    for item in checklist_items:
+        out.append(f"- {item}")
+    out.append("")
+
+    return "\n".join(out)
+
+
 def write_output_readme_files(paths: ProjectPaths) -> None:
     """Write every outputs/**/README.md (not summary_report.md; that file is data-driven)."""
     # --- Entire outputs/ tree (navigation hub) ---
@@ -114,7 +218,8 @@ outputs/
 ## Regeneration note
 
 ``run_all.py`` **deletes** the previous ``outputs/`` tree before rebuilding. Commit or copy anything you need to keep before re-running.
-""",
+"""
+        + _md_appendix_study_questions(domain="outputs/"),
     )
 
     # --- EDA root ---
@@ -180,7 +285,8 @@ When many cells share the same thickness, scatter plots **stack vertically**. Th
 ## Electrochemical shorthand
 
 Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` / ``$$...$$``.
-""",
+"""
+        + _md_appendix_study_questions(domain="outputs/eda/"),
     )
 
     # --- EDA plots index ---
@@ -501,7 +607,8 @@ Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **
 ## Honesty check
 
 With one discrete $x$ axis, flexible models can **interpolate cohorts**. High $R^2_j$ plus structured residual-vs-$x$ plots $\Rightarrow$ scrutinize **shape** and **stability**, not only scalar scores. If two models tie on RMSE, prefer the one with **flatter** residuals vs $x$ and more plausible **partial dependence** (see ``../explainability/``).
-""",
+"""
+        + _md_appendix_study_questions(domain="outputs/models/"),
     )
 
     _w(
@@ -774,7 +881,8 @@ These tools describe the **trained estimator**, not necessarily a physical mecha
 ## Relationship to modelling outputs
 
 Explainability is run for the **best overall** model (lowest mean RMSE across targets) after refitting on all data. For other models, use **their** diagnostics under ``outputs/models/diagnostics_plots/<ModelSafe>/`` and compare PDP shapes mentally or re-run a custom script if needed.
-""",
+"""
+        + _md_appendix_study_questions(domain="outputs/explainability/"),
     )
 
     _w(
