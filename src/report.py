@@ -125,6 +125,16 @@ def write_summary_report_md(out_path: Path, ri: ReportInputs) -> None:
         "and residual sweeps keyed to thickness."
     )
     lines.append("")
+    lines.append("## Metric definitions (in-sample)")
+    lines.append("")
+    lines.append("Residuals $\\hat{\\varepsilon}_{ij} = y_{ij} - \\hat{y}_{ij}$. For each target $j$:")
+    lines.append("")
+    lines.append(
+        "$$\\mathrm{MAE}_j = \\frac{1}{n}\\sum_{i=1}^{n}\\bigl|\\hat{\\varepsilon}_{ij}\\bigr|,\\qquad "
+        "\\mathrm{RMSE}_j = \\sqrt{\\frac{1}{n}\\sum_{i=1}^{n}\\hat{\\varepsilon}_{ij}^{2}},\\qquad "
+        "R^{2}_j = 1 - \\frac{\\sum_i \\hat{\\varepsilon}_{ij}^{2}}{\\sum_i (y_{ij}-\\bar{y}_j)^{2}}.$$"
+    )
+    lines.append("")
 
     out_path.write_text("\n".join(lines), encoding="utf-8")
 

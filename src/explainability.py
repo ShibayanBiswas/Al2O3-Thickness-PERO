@@ -7,9 +7,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .plots import savefig, with_axes
+from .plots import savefig, scatter_with_marginals, with_axes
 from .utils import ensure_dir, optional_import, safe_filename, smooth_curve_1d, strip_parentheses_text, to_title_case
-from .viz_style import get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
+from .viz_style import PERO, get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
 
 @dataclass(frozen=True)
@@ -86,7 +86,7 @@ def shap_explain_1d_single_output(
     if X_use.shape[0] > max_samples:
         X_use = X_use.sample(max_samples, random_state=getattr(cfg, "random_seed", 42))
 
-    # Use shap.Explainer where possible so beeswarm and waterfall work consistently
+    # shap.Explainer for consistent attribution values (waterfall plots intentionally omitted)
     try:
         explainer = shap.Explainer(estimator, X_use)
         shap_values = explainer(X_use)
@@ -107,32 +107,33 @@ def shap_explain_1d_single_output(
         rng = np.random.default_rng(getattr(cfg, "random_seed", 42))
         xj = xvals + rng.normal(0, 0.02 * (np.nanmax(xvals) - np.nanmin(xvals) + 1e-9), size=xvals.shape)
 
-        fig, ax = plt.subplots(figsize=(12, 7))
+        fig, ax = plt.subplots(figsize=(7.5, 7.5))
+        set_dark_background(fig, ax)
         ax.fill_between(
             np.sort(xvals),
             np.quantile(svals, 0.10) * np.ones_like(np.sort(xvals)),
             np.quantile(svals, 0.90) * np.ones_like(np.sort(xvals)),
-            color="#EAF0FF",
+            color=PERO.text,
             alpha=0.06,
             label="Shap Band",
         )
-        ax.scatter(xj, svals, s=62, alpha=0.78, color="#5BC0EB", edgecolor="#0B0F1A", linewidth=0.8, label="Shap Values")
+        ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
         # Smooth trend of SHAP value vs thickness
         try:
             order = np.argsort(xvals)
             s_ord = smooth_curve_1d(svals[order])
-            ax.plot(xvals[order], s_ord, color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
+            ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=3.0, label="Smoothed Trend")
             ax.fill_between(
-                xvals[order], s_ord - np.nanstd(svals), s_ord + np.nanstd(svals), color="#FF9F1C", alpha=0.08, label="Trend Band"
+                xvals[order], s_ord - np.nanstd(svals), s_ord + np.nanstd(svals), color=PERO.orange, alpha=0.08, label="Trend Band"
             )
-            ax.fill_between(xvals[order], 0, s_ord, color="#FF9F1C", alpha=0.05, label="Trend Area")
+            ax.fill_between(xvals[order], 0, s_ord, color=PERO.orange, alpha=0.05, label="Trend Area")
         except Exception:
             pass
 
         ax.set_title(f"{t_title} Shap Summary Beeswarm")
         ax.set_xlabel(labels.x_label)
-        ax.set_ylabel("Shap Value")
-        legend_outside_top_right(ax, ncol=1)
+        ax.set_ylabel(r"SHAP value $\phi$")
+        legend_outside_top_right(ax, ncol=1, title="Attribution")
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_beeswarm__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     except Exception:
@@ -142,20 +143,23 @@ def shap_explain_1d_single_output(
     try:
         import matplotlib.pyplot as plt
 
+        from matplotlib.patches import Patch
+
         mean_abs = float(np.nanmean(np.abs(np.asarray(shap_values.values, dtype=float).reshape(-1))))
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.barh(["Thickness"], [mean_abs], color="#9FD356")
+        fig, ax = plt.subplots(figsize=(7.5, 7.5))
+        set_dark_background(fig, ax)
+        ax.barh([r"$\mathrm{Al}_{2}\mathrm{O}_{3}$ nm"], [mean_abs], color=PERO.green, edgecolor=PERO.ink, linewidth=0.9)
         ax.set_title(f"{t_title} Shap Summary Bar")
-        ax.set_xlabel("Mean Absolute Shap Value")
-        ax.text(
-            0.98,
-            0.98,
-            "Shap Bar",
-            transform=ax.transAxes,
-            ha="right",
-            va="top",
-            fontsize=11,
-            bbox={"facecolor": "#121B2E", "edgecolor": "#3A466B", "alpha": 0.9, "pad": 0.4},
+        ax.set_xlabel(r"Mean absolute SHAP value: $\mathbb{E}[|\phi|]$")
+        legend_outside_top_right(
+            ax,
+            handles=[
+                Patch(
+                    facecolor=PERO.green,
+                    edgecolor=PERO.ink,
+                    label=r"Single-feature attribution magnitude",
+                )
+            ],
         )
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_bar__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
@@ -173,7 +177,7 @@ def shap_explain_1d_single_output(
         rng = np.random.default_rng(getattr(cfg, "random_seed", 42))
         xj = xvals + rng.normal(0, 0.02 * (np.nanmax(xvals) - np.nanmin(xvals) + 1e-9), size=xvals.shape)
 
-        fig, ax = plt.subplots(figsize=(12, 7))
+        fig, ax = plt.subplots(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
 
         # global SHAP band
@@ -182,57 +186,30 @@ def shap_explain_1d_single_output(
             xvals[order],
             np.quantile(svals, 0.10) * np.ones_like(xvals[order]),
             np.quantile(svals, 0.90) * np.ones_like(xvals[order]),
-            color="#EAF0FF",
+            color=PERO.text,
             alpha=0.06,
             label="Shap Band",
         )
-        ax.scatter(xj, svals, s=62, alpha=0.78, color="#5BC0EB", edgecolor="#0B0F1A", linewidth=0.8, label="Shap Values")
+        ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
 
         s_ord = smooth_curve_1d(svals[order])
-        ax.plot(xvals[order], s_ord, color="#FF9F1C", linewidth=3.0, label="Smoothed Trend")
+        ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=3.0, label="Smoothed Trend")
         ax.fill_between(
             xvals[order],
             s_ord - np.nanstd(svals),
             s_ord + np.nanstd(svals),
-            color="#FF9F1C",
+            color=PERO.orange,
             alpha=0.08,
             label="Trend Band",
         )
-        ax.fill_between(xvals[order], 0, s_ord, color="#FF9F1C", alpha=0.05, label="Trend Area")
+        ax.fill_between(xvals[order], 0, s_ord, color=PERO.orange, alpha=0.05, label="Trend Area")
 
         ax.set_title(f"{t_title} Shap Dependence")
         ax.set_xlabel(labels.x_label)
-        ax.set_ylabel("Shap Value")
-        legend_outside_top_right(ax, ncol=1)
+        ax.set_ylabel(r"SHAP value $\phi$")
+        legend_outside_top_right(ax, ncol=1, title="Attribution")
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_dependence__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
-    except Exception:
-        pass
-
-    # Custom Waterfall Style Plot for Representative Samples
-    try:
-        import matplotlib.pyplot as plt
-
-        xvals = X_use.iloc[:, 0].to_numpy(dtype=float)
-        svals = np.asarray(shap_values.values, dtype=float).reshape(-1)
-        base = float(np.asarray(shap_values.base_values, dtype=float).reshape(-1)[0]) if hasattr(shap_values, "base_values") else 0.0
-        idxs = [
-            int(np.argmin(xvals)),
-            int(np.argsort(np.abs(xvals - np.median(xvals)))[0]),
-            int(np.argmax(xvals)),
-        ]
-        for k, idx in enumerate(idxs, start=1):
-            contrib = float(svals[idx])
-            pred = base + contrib
-            fig, ax = plt.subplots(figsize=(11, 6))
-            ax.barh(["Base Value"], [base], color="#5BC0EB", alpha=0.9, label="Base Value")
-            ax.barh(["Feature Contribution"], [contrib], color="#FF9F1C", alpha=0.9, label="Feature Contribution")
-            ax.axvline(pred, color="#EAF0FF", linewidth=2.2, linestyle="--", label="Predicted Value")
-            ax.set_title(f"{t_title} Shap Waterfall")
-            ax.set_xlabel("Model Output")
-            legend_outside_top_right(ax, ncol=1)
-            polish_axes(ax)
-            saved.append(savefig(fig, out_plots, f"shap_waterfall__{target}__sample{k}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     except Exception:
         pass
 
@@ -265,30 +242,30 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
         t_title = labels.target_title_map.get(target, to_title_case(strip_parentheses_text(target)))
         y_label = labels.y_label_map.get(target, t_title)
 
-        fig, ax = plt.subplots(figsize=(12, 7))
+        fig, ax = plt.subplots(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
 
         # ICE lines as bootstrapped response curves
         if band is not None and band.shape[2] > j:
             for k in range(min(25, band.shape[0])):
-                ax.plot(x_grid, smooth_curve_1d(band[k, :, j]), color="#EAF0FF", alpha=0.10, linewidth=1.0)
+                ax.plot(x_grid, smooth_curve_1d(band[k, :, j]), color=PERO.text, alpha=0.10, linewidth=1.0)
             q10 = np.nanpercentile(band[:, :, j], 10, axis=0)
             q90 = np.nanpercentile(band[:, :, j], 90, axis=0)
             q10s = smooth_curve_1d(q10)
             q90s = smooth_curve_1d(q90)
-            ax.fill_between(x_grid, q10s, q90s, color="#EAF0FF", alpha=0.10, label="ICE Band")
-            ax.plot(x_grid, q10s, color="#EAF0FF", linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Lower Boundary")
-            ax.plot(x_grid, q90s, color="#EAF0FF", linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Upper Boundary")
+            ax.fill_between(x_grid, q10s, q90s, color=PERO.text, alpha=0.10, label="ICE Band")
+            ax.plot(x_grid, q10s, color=PERO.text, linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Lower Boundary")
+            ax.plot(x_grid, q90s, color=PERO.text, linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Upper Boundary")
 
         pdp_line = smooth_curve_1d(Yg[:, j])
-        ax.plot(x_grid, pdp_line, color="#5BC0EB", linewidth=3.2, label="Partial Dependence")
+        ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=3.2, label="Partial Dependence")
         span = float(np.nanmax(pdp_line) - np.nanmin(pdp_line) + 1e-9)
         y_floor = float(np.nanmin(pdp_line) - 0.04 * span)
-        ax.fill_between(x_grid, y_floor, pdp_line, color="#5BC0EB", alpha=0.07, label="Response Area")
+        ax.fill_between(x_grid, y_floor, pdp_line, color=PERO.sky, alpha=0.07, label="Response Area")
         ax.set_title(f"{t_title} Partial Dependence And ICE")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
-        legend_outside_top_right(ax, ncol=1)
+        legend_outside_top_right(ax, ncol=1, title="PDP / ICE")
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"Partial Dependence And ICE__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 
@@ -374,7 +351,7 @@ def local_sensitivity_curve(
         t_title = labels.target_title_map.get(target, to_title_case(strip_parentheses_text(target)))
         y_label = labels.y_label_map.get(target, t_title)
 
-        fig, axes = plt.subplots(2, 1, figsize=(12, 9), sharex=True, gridspec_kw={"height_ratios": [2.3, 1.0]})
+        fig, axes = plt.subplots(2, 1, figsize=(7.5, 7.5), sharex=True, gridspec_kw={"height_ratios": [2.3, 1.0]})
         ax = axes[0]
         axs = axes[1]
         set_dark_background(fig, [ax, axs])
@@ -383,27 +360,27 @@ def local_sensitivity_curve(
         if band is not None and band.shape[2] > j:
             q10_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 10, axis=0))
             q90_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 90, axis=0))
-            ax.fill_between(x_grid, q10_u, q90_u, color="#EAF0FF", alpha=0.10, label="Uncertainty Band")
-            ax.plot(x_grid, q10_u, color="#5BC0EB", linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Lower")
-            ax.plot(x_grid, q90_u, color="#5BC0EB", linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Upper")
+            ax.fill_between(x_grid, q10_u, q90_u, color=PERO.text, alpha=0.10, label="Uncertainty Band")
+            ax.plot(x_grid, q10_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Lower")
+            ax.plot(x_grid, q90_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Upper")
 
-        ax.plot(x_grid, yg_s, linewidth=3.2, color="#5BC0EB", label="Predicted Response")
+        ax.plot(x_grid, yg_s, linewidth=3.2, color=PERO.sky, label="Predicted Response")
         span_y = float(np.nanmax(yg_s) - np.nanmin(yg_s) + 1e-9)
         y_lo_fill = float(np.nanmin(yg_s) - 0.04 * span_y)
-        ax.fill_between(x_grid, y_lo_fill, yg_s, color="#5BC0EB", alpha=0.08, label="Response Fill")
+        ax.fill_between(x_grid, y_lo_fill, yg_s, color=PERO.sky, alpha=0.08, label="Response Fill")
         ax.set_title(f"{t_title} Sensitivity Curve")
         ax.set_ylabel(y_label)
-        legend_outside_top_right(ax, ncol=1)
+        legend_outside_top_right(ax, ncol=1, title="Response")
         polish_axes(ax)
 
         # Slope panel with shaded magnitude band
-        axs.fill_between(x_grid, 0, dydx_s, color="#D7263D", alpha=0.12, label="Slope Area")
-        axs.plot(x_grid, dydx_s, linewidth=2.6, color="#D7263D", label="Local Slope")
+        axs.fill_between(x_grid, 0, dydx_s, color=PERO.red, alpha=0.12, label="Slope Area")
+        axs.plot(x_grid, dydx_s, linewidth=2.6, color=PERO.red, label="Local Slope")
         sspan = float(np.nanmax(dydx_s) - np.nanmin(dydx_s) + 1e-12)
-        axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color="#D7263D", alpha=0.06, label="Slope Band")
+        axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color=PERO.red, alpha=0.06, label="Slope Band")
         axs.set_xlabel(labels.x_label)
-        axs.set_ylabel("Local Slope")
-        legend_outside_top_right(axs, ncol=1)
+        axs.set_ylabel(r"Local slope $\mathrm{d}\hat{y}/\mathrm{d}x$")
+        legend_outside_top_right(axs, ncol=1, title="Sensitivity")
         polish_axes(axs)
 
         saved.append(savefig(fig, out_plots, f"Sensitivity Curve__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))

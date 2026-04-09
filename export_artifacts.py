@@ -90,10 +90,6 @@ def build_specs(project_root: Path) -> list[ArtifactSpec]:
         for f in sorted(shap_dir.glob("shap_dependence__*.png")):
             t = f.stem.split("__", 1)[1]
             specs.append(ArtifactSpec(f, Path("Explainability") / "Shap" / f"Shap Dependence {_short_target(t)}.png"))
-        # only sample one waterfall per target to keep repo small
-        for f in sorted(shap_dir.glob("shap_waterfall__*__sample1.png")):
-            t = f.stem.split("__", 2)[1]
-            specs.append(ArtifactSpec(f, Path("Explainability") / "Shap" / f"Shap Waterfall {_short_target(t)}.png"))
 
     if pdp_dir.exists():
         for f in sorted(pdp_dir.glob("*.png")):

@@ -1,9 +1,32 @@
 # Bivariate Plots
 
-Bivariate views emphasize thickness response behavior for each target using trends and uncertainty aware overlays. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small, these plots are intentionally clean and avoid excessive panel counts that would reduce interpretability.
+Conditional structure $Y_j \mid x$: jittered scatter, interquartile bands by thickness, linear/cubic residual views, sorted profiles.
 
-For distribution style plots, focus on whether the observed values cluster tightly at a small set of levels or whether the variable behaves continuously. For thickness, the concentration at the zero level is expected to be dominant, so plots should be interpreted in a mixed discrete and continuous sense. The goal is not to force a continuous narrative but to represent what the experiment actually provides.
+## Files in each ``<TargetTitle>/`` subfolder
 
-On response panels, smooth traces are **estimators** of $ \hat{y}(x) $, not causal claims. They surface monotonicity, saturation, or threshold phenomenology; polynomial overlays provide an ordered family of curvature tests up to cubic order—often the decisive modeling degree of freedom when $p=1$.
+Stems (``*.png``):
 
-Annotation rules: Title Case labels, no gratuitous parentheses in display text, and Matplotlib mathtext for electrochemical symbols ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$). Companion Markdown in this repository uses GitHub `$...$` delimiters so the same expressions render in-browser without a LaTeX engine.
+- ``Scatter With Trends`` -- **start here** for each target: raw pairs $(x, Y_j)$ plus trend overlays and an **IQR tube** per discrete $x$.
+- ``Sorted Profile`` -- sorts observations by $x$ so you can **trace** $Y_j$ along the experimental axis even when the scatter is dense.
+- ``Residual Pattern`` -- subtracts low-order polynomial structure; **systematic** residual trends vs $x$ mean the conditional mean is not captured by a line or cubic.
+
+**Companion table:** ``../../tables/group_by_thickness__<TargetSafe>.csv`` (exact cohort $n$, mean, std).
+
+---
+
+## Study questions
+
+- At each thickness with multiple cells, is the **within-$x$ spread** large compared to **between-$x$** shifts in the median?
+- After viewing ``Residual Pattern``, would you defend a **linear** model for this target, or do you expect **nonlinear** or **step-like** behaviour?
+
+---
+
+## Reading guide
+
+Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+
+---
+
+## Figure style in this branch
+
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_2\mathrm{O}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.

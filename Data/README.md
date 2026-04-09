@@ -6,13 +6,15 @@ Authoritative data live here so provenance never forks silently. The pipeline re
 
 ## Design & measurement model (conceptual)
 
-Rows index experimental cells; columns hold **one** controlled continuous nominal input—alumina thickness $x\ge 0$ (nm)—plus four **downstream electrochemical readouts** modeled as
+Rows index experimental cells. The sole **controlled** continuous coordinate is **$\mathrm{Al}_{2}\mathrm{O}_{3}$** thickness $x\ge 0$ (nanometres), paired with four electrochemical responses:
 
 $$
-y_j = f_j(x) + \varepsilon_j,\quad j=1,\dots,4,
+y_j \;=\; f_j(x) + \varepsilon_j,
+\qquad j=1,\ldots,4,
+\qquad \mathbb{E}[\varepsilon_j \mid x]=0 \;\text{(working identity).}
 $$
 
-with unknown smooth or threshold-like $f_j$ and cell-level noise $\varepsilon_j$. The tabulation is sparse in $x$: many replicate specimens share identical thickness, so **cohort structure** dominates naive “continuous regression” intuition.
+The maps $f_j$ may be smooth, piecewise, or cohort-dominated; with replicated $x$ atoms, **within-level** and **between-level** variance must be read together—marginal correlations are not sufficient statistics.
 
 ---
 

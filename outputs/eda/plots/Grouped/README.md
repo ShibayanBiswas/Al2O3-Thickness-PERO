@@ -1,9 +1,28 @@
 # Grouped Plots
 
-Grouped views emphasize cohort comparisons across discrete thickness levels with uncertainty bands. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small, these plots are intentionally clean and avoid excessive panel counts that would reduce interpretability.
+Cohort summaries: for each thickness atom $x_k$, means $\bar Y_j$ and $\pm s$ tubes along $x$.
 
-For distribution style plots, focus on whether the observed values cluster tightly at a small set of levels or whether the variable behaves continuously. For thickness, the concentration at the zero level is expected to be dominant, so plots should be interpreted in a mixed discrete and continuous sense. The goal is not to force a continuous narrative but to represent what the experiment actually provides.
+## Files in each ``<TargetTitle>/`` subfolder
 
-On response panels, smooth traces are **estimators** of $ \hat{y}(x) $, not causal claims. They surface monotonicity, saturation, or threshold phenomenology; polynomial overlays provide an ordered family of curvature tests up to cubic order—often the decisive modeling degree of freedom when $p=1$.
+- ``Group Mean With Uncertainty.png`` -- connects **cohort means** $ar Y_j$ at each measured $x_k$ with a tube based on within-group standard deviation $s$.
 
-Annotation rules: Title Case labels, no gratuitous parentheses in display text, and Matplotlib mathtext for electrochemical symbols ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$). Companion Markdown in this repository uses GitHub `$...$` delimiters so the same expressions render in-browser without a LaTeX engine.
+**Aggregate table (all targets):** ``../../tables/05_grouped_summary_all_targets_by_thickness.csv``.
+
+---
+
+## Study questions
+
+- Does $ar Y_j$ change **monotonically** with $x$, or are some thicknesses **local optima**?
+- Is uncertainty **heteroscedastic** (wider tubes at some $x_k$)? That matters for weighted or robust modelling.
+
+---
+
+## Reading guide
+
+Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+
+---
+
+## Figure style in this branch
+
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_2\mathrm{O}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.

@@ -5,8 +5,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
-from .plots import annotate_extremes, savefig, with_axes
+from .plots import annotate_extremes, savefig, scatter_with_marginals, with_axes
 from .utils import (
     ensure_dir,
     iqr_outliers,
@@ -17,7 +19,7 @@ from .utils import (
     to_title_case,
     zscore_outliers,
 )
-from .viz_style import get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
+from .viz_style import PERO, get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
 
 @dataclass(frozen=True)
@@ -113,36 +115,70 @@ def run_deep_eda(
 
         var_dir = ensure_dir(out_uni / safe_filename(to_title_case(strip_parentheses_text(name))))
 
-        # Histogram + KDE
-        fig, ax = with_axes(figsize=(10, 6))
-        sns.histplot(vals, kde=True, ax=ax, color="#5BC0EB", edgecolor="#0B0F1A", alpha=0.92)
+        # Histogram + KDE (explicit series so legend entries always resolve)
+        fig, ax = with_axes(figsize=(7.5, 7.5))
+        set_dark_background(fig, ax)
+        sns.histplot(vals, stat="density", kde=False, ax=ax, color=PERO.sky, edgecolor=PERO.ink, alpha=0.88, label="Histogram")
+        sns.kdeplot(vals, ax=ax, color=PERO.orange, linewidth=2.6, warn_singular=False, label="Kernel density")
         ax.set_title(f"{title} Distribution")
         ax.set_xlabel(display)
         ax.set_ylabel("Density")
+        legend_outside_top_right(ax, ncol=1, title="Density")
         polish_axes(ax)
         savefig(fig, var_dir, f"Histogram And Kernel Density", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Box + Violin
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-        sns.boxplot(x=vals, ax=axes[0], color="#9FD356")
+        fig, axes = plt.subplots(1, 2, figsize=(7.5, 7.5))
+        set_dark_background(fig, axes)
+        sns.boxplot(x=vals, ax=axes[0], color=PERO.green)
         axes[0].set_title(f"{title} Box Plot")
         axes[0].set_xlabel(display)
+        legend_outside_top_right(
+            axes[0],
+            handles=[Patch(facecolor=PERO.green, edgecolor=PERO.ink, linewidth=0.9, label="Box quartiles")],
+            title="Summary",
+        )
         polish_axes(axes[0])
-        sns.violinplot(x=vals, ax=axes[1], color="#FF9F1C", inner="quartile")
+        sns.violinplot(x=vals, ax=axes[1], color=PERO.orange, inner="quartile")
         axes[1].set_title(f"{title} Violin Plot")
         axes[1].set_xlabel(display)
+        legend_outside_top_right(
+            axes[1],
+            handles=[Patch(facecolor=PERO.orange, edgecolor=PERO.ink, linewidth=0.9, label="Kernel + quartiles")],
+            title="Summary",
+        )
         polish_axes(axes[1])
         savefig(fig, var_dir, f"Box And Violin", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Raincloud Style Plot
         try:
-            fig, ax = with_axes(figsize=(11, 4))
-            sns.violinplot(x=vals, ax=ax, color="#5BC0EB", inner=None, cut=0, linewidth=0)
-            sns.boxplot(x=vals, ax=ax, width=0.22, color="#9FD356", fliersize=0)
-            sns.stripplot(x=vals, ax=ax, color="#EAF0FF", alpha=0.65, jitter=0.18, size=5)
+            fig, ax = with_axes(figsize=(7.5, 7.5))
+            set_dark_background(fig, ax)
+            sns.violinplot(x=vals, ax=ax, color=PERO.sky, inner=None, cut=0, linewidth=0)
+            sns.boxplot(x=vals, ax=ax, width=0.22, color=PERO.green, fliersize=0)
+            sns.stripplot(x=vals, ax=ax, color=PERO.text, alpha=0.65, jitter=0.18, size=5)
             ax.set_title(f"{title} Raincloud Plot")
             ax.set_xlabel(display)
             ax.set_ylabel("")
+            legend_outside_top_right(
+                ax,
+                handles=[
+                    Patch(facecolor=PERO.sky, edgecolor=PERO.ink, linewidth=0.6, label="Violin"),
+                    Patch(facecolor=PERO.green, edgecolor=PERO.ink, linewidth=0.6, label="Box"),
+                    Line2D(
+                        [0],
+                        [0],
+                        marker="o",
+                        color="w",
+                        markerfacecolor=PERO.text,
+                        markeredgecolor=PERO.ink,
+                        markersize=7,
+                        linestyle="",
+                        label="Points",
+                    ),
+                ],
+                title="Layers",
+            )
             polish_axes(ax)
             savefig(fig, var_dir, "Raincloud Plot", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
         except Exception:
@@ -150,11 +186,11 @@ def run_deep_eda(
 
         # ECDF
         x_ecdf, y_ecdf = _ecdf(vals)
-        fig, ax = with_axes(figsize=(10, 6))
+        fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
         y_ecdf_s = smooth_curve_1d(y_ecdf) if x_ecdf.size >= 3 else y_ecdf
-        ax.fill_between(x_ecdf, 0, y_ecdf_s, alpha=0.12, color="#F7B801", label="Cumulative Area")
-        ax.plot(x_ecdf, y_ecdf_s, linestyle="-", alpha=0.92, linewidth=2.8, color="#F7B801", label="Smoothed ECDF")
+        ax.fill_between(x_ecdf, 0, y_ecdf_s, alpha=0.12, color=PERO.gold, label="Cumulative Area")
+        ax.plot(x_ecdf, y_ecdf_s, linestyle="-", alpha=0.92, linewidth=2.8, color=PERO.gold, label="Smoothed ECDF")
         ax.set_title(f"{title} Empirical Cumulative Distribution")
         ax.set_xlabel(display)
         ax.set_ylabel("Cumulative Probability")
@@ -186,12 +222,12 @@ def run_deep_eda(
                     scalers["Power Yeo Johnson Scale"] = PowerTransformer(method="yeo-johnson", standardize=True).fit_transform(Xv).ravel()
                 except Exception:
                     scalers = {}
-                fig, ax = with_axes(figsize=(10, 5))
+                fig, ax = with_axes(figsize=(7.5, 7.5))
                 set_dark_background(fig, ax)
-                sns.kdeplot(v, ax=ax, linewidth=2.8, label="Original Scale", color="#5BC0EB", warn_singular=False)
-                sns.kdeplot(z, ax=ax, linewidth=2.8, label="Standard Scale", color="#9FD356", warn_singular=False)
-                sns.kdeplot(mm, ax=ax, linewidth=2.8, label="Min Max Scale", color="#FF9F1C", warn_singular=False)
-                palette = ["#5E2BFF", "#F7B801", "#D7263D", "#1B998B", "#C17CFF"]
+                sns.kdeplot(v, ax=ax, linewidth=2.8, label="Original Scale", color=PERO.sky, warn_singular=False)
+                sns.kdeplot(z, ax=ax, linewidth=2.8, label="Standard Scale", color=PERO.green, warn_singular=False)
+                sns.kdeplot(mm, ax=ax, linewidth=2.8, label="Min Max Scale", color=PERO.orange, warn_singular=False)
+                palette = PERO.multiline_series()
                 for (lab, arr), col in zip(scalers.items(), palette, strict=False):
                     try:
                         sns.kdeplot(arr, ax=ax, linewidth=2.4, label=lab, color=col, warn_singular=False)
@@ -238,12 +274,12 @@ def run_deep_eda(
 
         y_dir = ensure_dir(out_bi / safe_filename(y_title))
 
-        # Scatter + jitter + linear trend only
-        fig, ax = with_axes(figsize=(11, 7))
+        # Scatter + jitter + trends
+        fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
-        ax.scatter(x_j, yv, alpha=0.82, s=64, edgecolor="#0B0F1A", linewidth=0.8, label="Observed Points", color="#5BC0EB")
+        ax.scatter(x_j, yv, alpha=0.82, s=64, edgecolor=PERO.ink, linewidth=0.8, label="Observed Points", color=PERO.sky)
 
-        # Mandatory area shade based on thickness level quartiles
+        # Mandatory area shade based on thickness-level quartiles
         try:
             gq = df.groupby(x_col)[y].quantile([0.25, 0.5, 0.75]).unstack()
             gx = gq.index.to_numpy(dtype=float)
@@ -255,24 +291,65 @@ def run_deep_eda(
             q75s = smooth_curve_1d(q75[order])
             q50s = smooth_curve_1d(q50[order])
             gxo = gx[order]
-            ax.fill_between(gxo, q25s, q75s, color="#EAF0FF", alpha=0.08, label="Interquartile Band")
-            ax.plot(gxo, q50s, color="#9FD356", linewidth=2.8, label="Median By Thickness")
-            ax.plot(gxo, q25s, color="#9FD356", linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Lower")
-            ax.plot(gxo, q75s, color="#9FD356", linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Upper")
+            ax.fill_between(gxo, q25s, q75s, color=PERO.text, alpha=0.08, label="Interquartile Band")
+            ax.plot(gxo, q50s, color=PERO.green, linewidth=2.8, label="Median By Thickness")
+            ax.plot(gxo, q25s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Lower")
+            ax.plot(gxo, q75s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Upper")
         except Exception:
             pass
 
-        # Linear trend
+        # Reference y-range helpers (for area fills / rugs)
+        try:
+            yv_f = yv[np.isfinite(yv)]
+            y_lo = float(np.min(yv_f)) if yv_f.size else 0.0
+            y_hi = float(np.max(yv_f)) if yv_f.size else 1.0
+            y_span = float(y_hi - y_lo + 1e-9)
+        except Exception:
+            y_lo, y_hi, y_span = 0.0, 1.0, 1.0
+
+        # Linear trend + residual band (in-sample)
         try:
             gx, gp = _polynomial_fit(x, yv, degree=1)
-            ax.plot(gx, gp, color="#FF9F1C", linewidth=3.2, label="Linear Trend")
+            ax.plot(gx, gp, color=PERO.orange, linewidth=3.2, label="Linear Trend")
+            ax.fill_between(gx, y_lo - 0.02 * y_span, gp, color=PERO.orange, alpha=0.045, label="Linear Trend Area")
             pred_x = np.polyval(np.polyfit(x, yv, deg=1), x)
             resid = yv - pred_x
             band = float(np.nanstd(resid, ddof=1)) if np.isfinite(np.nanstd(resid, ddof=1)) else 0.0
             if band > 0:
-                ax.fill_between(gx, gp - band, gp + band, color="#FF9F1C", alpha=0.08, label="Trend Band")
-                ax.plot(gx, gp - band, color="#FF9F1C", linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Lower Boundary")
-                ax.plot(gx, gp + band, color="#FF9F1C", linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Upper Boundary")
+                ax.fill_between(gx, gp - band, gp + band, color=PERO.orange, alpha=0.08, label="Trend Band")
+                ax.plot(gx, gp - band, color=PERO.orange, linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Lower Boundary")
+                ax.plot(gx, gp + band, color=PERO.orange, linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Upper Boundary")
+        except Exception:
+            pass
+
+        # Cubic trend (shape probe) + residual band
+        try:
+            gx3, gp3 = _polynomial_fit(x, yv, degree=3)
+            ax.plot(gx3, gp3, color=PERO.teal, linewidth=2.8, alpha=0.95, label="Cubic Trend")
+            ax.fill_between(gx3, y_lo - 0.02 * y_span, gp3, color=PERO.teal, alpha=0.035, label="Cubic Trend Area")
+            pred_x3 = np.polyval(np.polyfit(x, yv, deg=3), x)
+            resid3 = yv - pred_x3
+            band3 = float(np.nanstd(resid3, ddof=1)) if np.isfinite(np.nanstd(resid3, ddof=1)) else 0.0
+            if band3 > 0:
+                ax.fill_between(gx3, gp3 - band3, gp3 + band3, color=PERO.teal, alpha=0.06, label="Cubic Band")
+        except Exception:
+            pass
+
+        # LOWESS smoother (if statsmodels is available) + faint area
+        low = _lowess_xy(x, yv, frac=0.55)
+        if low is not None:
+            try:
+                xl, yl = low
+                yl_s = smooth_curve_1d(yl)
+                ax.plot(xl, yl_s, color=PERO.gold, linewidth=3.0, alpha=0.9, label="Lowess Smoother")
+                ax.fill_between(xl, y_lo - 0.02 * y_span, yl_s, color=PERO.gold, alpha=0.03, label="Lowess Area")
+            except Exception:
+                pass
+
+        # Thickness rug (shows discrete support without cluttering the y-scale)
+        try:
+            rug_y = y_lo - 0.04 * y_span
+            ax.scatter(x, np.full_like(x, rug_y, dtype=float), s=16, alpha=0.35, color=PERO.text, edgecolor=PERO.ink, linewidth=0.4, label="Thickness Rug")
         except Exception:
             pass
 
@@ -286,15 +363,15 @@ def run_deep_eda(
 
         # Sorted-by-thickness line plot
         order = np.argsort(x)
-        fig, ax = with_axes(figsize=(11, 6))
+        fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
         xs = x[order]
         ys = yv[order]
         ys_s = smooth_curve_1d(ys)
-        ax.plot(xs, ys_s, linewidth=3.0, color="#5BC0EB", label="Smoothed Profile")
+        ax.plot(xs, ys_s, linewidth=3.0, color=PERO.sky, label="Smoothed Profile")
         span = float(np.nanmax(ys_s) - np.nanmin(ys_s) + 1e-9)
         y_floor = float(np.nanmin(ys_s) - 0.03 * span)
-        ax.fill_between(xs, y_floor, ys_s, color="#5BC0EB", alpha=0.08, label="Profile Area")
+        ax.fill_between(xs, y_floor, ys_s, color=PERO.sky, alpha=0.08, label="Profile Area")
         try:
             s = pd.Series(ys)
             win = min(9, max(3, ys.size // 5))
@@ -304,10 +381,10 @@ def run_deep_eda(
             q25s = smooth_curve_1d(q25)
             q75s = smooth_curve_1d(q75)
             meds = smooth_curve_1d(med)
-            ax.fill_between(xs, q25s, q75s, color="#EAF0FF", alpha=0.10, label="Interquartile Band")
-            ax.plot(xs, meds, color="#9FD356", linewidth=2.4, label="Rolling Median")
-            ax.plot(xs, q25s, color="#9FD356", linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Lower")
-            ax.plot(xs, q75s, color="#9FD356", linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Upper")
+            ax.fill_between(xs, q25s, q75s, color=PERO.text, alpha=0.10, label="Interquartile Band")
+            ax.plot(xs, meds, color=PERO.green, linewidth=2.4, label="Rolling Median")
+            ax.plot(xs, q25s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Lower")
+            ax.plot(xs, q75s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Upper")
         except Exception:
             pass
         ax.set_title(f"{y_title} Sorted By Thickness")
@@ -318,17 +395,17 @@ def run_deep_eda(
         savefig(fig, y_dir, "Sorted Profile", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Residual-like view vs thickness (linear and cubic)
-        fig, ax = with_axes(figsize=(11, 6))
+        fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
-        for deg, col, name in [(1, "#1B998B", "Linear Residuals"), (3, "#FF9F1C", "Cubic Residuals")]:
+        for deg, col, name in [(1, PERO.teal, "Linear Residuals"), (3, PERO.orange, "Cubic Residuals")]:
             try:
                 coefs = np.polyfit(x, yv, deg=deg)
                 pred = np.polyval(coefs, x)
                 resid = yv - pred
-                ax.scatter(x_j, resid, alpha=0.75, s=50, label=name, color=col, edgecolor="#0B0F1A", linewidth=0.7)
+                ax.scatter(x_j, resid, alpha=0.75, s=50, label=name, color=col, edgecolor=PERO.ink, linewidth=0.7)
             except Exception:
                 pass
-        ax.axhline(0, color="#EAF0FF", linewidth=1.2, alpha=0.85)
+        ax.axhline(0, color=PERO.text, linewidth=1.2, alpha=0.85)
         ax.set_title(f"{y_title} Residual Pattern By Thickness")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel("Residual")
@@ -355,7 +432,7 @@ def run_deep_eda(
     # Plot group-wise means with error bars
     for y in y_cols:
         g = df.groupby(x_col)[y].agg(["count", "mean", "std"]).reset_index().sort_values(x_col)
-        fig, ax = with_axes(figsize=(11, 6))
+        fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
         y_title = labels.target_title_map.get(y, to_title_case(strip_parentheses_text(y)))
         y_label = labels.y_label_map.get(y, to_title_case(strip_parentheses_text(y)))
@@ -365,10 +442,10 @@ def run_deep_eda(
         mu_s = smooth_curve_1d(mu)
         lo_s = smooth_curve_1d(mu - sg)
         hi_s = smooth_curve_1d(mu + sg)
-        ax.fill_between(gx, lo_s, hi_s, color="#9FD356", alpha=0.14, label="Uncertainty Band")
-        ax.plot(gx, mu_s, linestyle="-", linewidth=3.0, color="#9FD356", label="Mean Curve")
-        ax.plot(gx, lo_s, linestyle="--", linewidth=1.2, color="#9FD356", alpha=0.55, label="Lower Boundary")
-        ax.plot(gx, hi_s, linestyle="--", linewidth=1.2, color="#9FD356", alpha=0.55, label="Upper Boundary")
+        ax.fill_between(gx, lo_s, hi_s, color=PERO.green, alpha=0.14, label="Uncertainty Band")
+        ax.plot(gx, mu_s, linestyle="-", linewidth=3.0, color=PERO.green, label="Mean Curve")
+        ax.plot(gx, lo_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Lower Boundary")
+        ax.plot(gx, hi_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Upper Boundary")
         ax.set_title(f"{y_title} Group Mean With Uncertainty")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
@@ -420,7 +497,7 @@ def run_deep_eda(
     pearson_corr.to_csv(out_tables / "07_corr_pearson.csv")
     spearman_corr.to_csv(out_tables / "08_corr_spearman.csv")
 
-    fig, ax = with_axes(figsize=(10, 8))
+    fig, ax = with_axes(figsize=(7.5, 7.5))
     set_dark_background(fig, ax)
     sns.heatmap(
         pearson_corr.rename(index=display_name, columns=display_name),
@@ -428,9 +505,11 @@ def run_deep_eda(
         fmt=".2f",
         cmap="vlag",
         ax=ax,
-        cbar_kws={"shrink": 0.85},
+        linewidths=0.55,
+        linecolor=PERO.panel,
+        cbar_kws={"shrink": 0.85, "label": r"Pearson $\rho$"},
     )
-    ax.set_title("Correlation Heatmap Pearson")
+    ax.set_title(r"Correlation heatmap: Pearson $\rho$")
     ax.tick_params(axis="x", labelrotation=28, labelsize=10)
     ax.tick_params(axis="y", labelrotation=0, labelsize=10)
     for lab in ax.get_xticklabels():
@@ -439,7 +518,7 @@ def run_deep_eda(
     polish_axes(ax)
     savefig(fig, out_rel, "Correlation Heatmap Pearson", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
-    fig, ax = with_axes(figsize=(10, 8))
+    fig, ax = with_axes(figsize=(7.5, 7.5))
     set_dark_background(fig, ax)
     sns.heatmap(
         spearman_corr.rename(index=display_name, columns=display_name),
@@ -447,9 +526,11 @@ def run_deep_eda(
         fmt=".2f",
         cmap="vlag",
         ax=ax,
-        cbar_kws={"shrink": 0.85},
+        linewidths=0.55,
+        linecolor=PERO.panel,
+        cbar_kws={"shrink": 0.85, "label": r"Spearman $\rho_s$"},
     )
-    ax.set_title("Correlation Heatmap Spearman")
+    ax.set_title(r"Correlation heatmap: Spearman $\rho_s$")
     ax.tick_params(axis="x", labelrotation=28, labelsize=10)
     ax.tick_params(axis="y", labelrotation=0, labelsize=10)
     for lab in ax.get_xticklabels():

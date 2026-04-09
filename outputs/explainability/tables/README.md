@@ -1,9 +1,62 @@
 # Explainability Tables Index
 
-This directory contains export ready tables that quantify the importance and sensitivity of the thickness feature for each target. In a single feature setting, importance is not a competition among many inputs. Instead, it provides a stability oriented measure of whether the fitted model meaningfully relies on thickness to explain variance in each electrochemical outcome.
+Single CSV written by ``permutation_importance_single_feature()`` in ``src/explainability.py`` when the call succeeds.
 
-Permutation importance tabulates the positive decrement in $R^2$ when $x$ is permuted; large values mean the in-sample fit is brittle without correct thickness ordering. Bootstrap dispersion across repeats quantifies Monte Carlo noise.
+---
 
-These values should be interpreted together with the response curve plots. A model can show importance even when the response shape is not monotonic, which may indicate nonlinear or threshold like behavior. Conversely, a smooth response curve with low importance may indicate that the variation is small relative to measurement noise at the thickness levels available.
+## File
 
-Tables ship with explicit column semantics and stable target keys. Companion prose uses GitHub-flavored `$...$` math so coefficients and symbols stay legible on GitHub without a LaTeX toolchain—**PERO** appendix hygiene.
+| File | Role |
+| --- | --- |
+| ``permutation_importance_single_feature.csv`` | One row per target: Monte Carlo mean/std of $\Delta R^2$ from shuffling $x$ |
+
+---
+
+## Columns
+
+| Column | Meaning |
+| --- | --- |
+| ``target`` | Target column name |
+| ``feature`` | Shuffled column (always the thickness feature, first column of $X$) |
+| ``r2_drop_mean`` | Mean of $R^2_{\text{full}} - R^2_{\text{permuted}}$ over repeats |
+| ``r2_drop_std`` | Sample std of that drop (``ddof=1``) |
+| ``n_repeats`` | Number of permutations (``run_all`` uses 120) |
+
+---
+
+## Definition
+
+For target $j$,
+
+$$
+\Delta R^2_j = R^2_j - R^2_j(\pi),
+$$
+
+with $\pi$ a random permutation of the thickness column.
+
+---
+
+## How to read
+
+| $\Delta R^2_j$ | Reading |
+| --- | --- |
+| Large | Fit leans on authentic ordering of $x$ |
+| Tiny | Thickness weak in-sample or noise-dominated |
+
+Pair with PDP/ICE and (if present) SHAP $|\phi|$ --- tables encode **stability**, curves encode **shape**.
+
+---
+
+## Connecting table values to plots
+
+| CSV signal | Where to look |
+| --- | --- |
+| Large ``r2_drop_mean`` for target $j$ | ``../plots/PartialDependence/`` and ``../plots/Sensitivity/`` for that target |
+| Small drop for every target | Check whether base $R^2$ in ``outputs/models/tables/`` was already modest |
+| High ``r2_drop_std`` | Uncertain importance; read ICE / bootstrap ribbons as **intervals**, not point truth |
+
+---
+
+## Statistical intuition
+
+Permutation destroys **joint structure** $(x, y)$ while preserving the **marginal** histogram of $x$. If predictions barely change, the fitted map did not rely on which row carried which thickness --- either the signal is weak or the estimator is too rigid to use $x$.

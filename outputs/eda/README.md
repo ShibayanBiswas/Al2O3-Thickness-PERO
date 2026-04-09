@@ -1,9 +1,60 @@
 # Exploratory Data Analysis Outputs
 
-This directory contains a complete exploratory analysis of a single scalar design variable, the aluminum oxide thickness $x$ (nm), mapped to four electrochemical responses. The figures are publication oriented: unified typography, restrained grids, and contrast sufficient for projection or print. The EDA is deliberately deep because $n$ is modest and $x$ is highly discrete, so distributional shape and cohort overlap carry more information than any lone summary statistic.
+Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
 
-The **Plots** folder is organized into univariate, bivariate, grouped, and relationship views. Univariate work characterizes marginal laws of $x$ and of each target: histograms with smooth density overlays, empirical CDFs, and robust box and violin summaries. Bivariate work estimates the conditional mean trend $ \mathbb{E}[Y \mid x] $ from scatter, smoothers, and low-order polynomials, with explicit handling of repeated $x$. Grouped views treat each thickness atom as a cohort and visualize means with uncertainty tubes so within-level noise is visible.
+---
 
-The **Tables** folder contains audit and summary exports suitable for direct appendix insertion: dtypes, missingness, medians, IQRs, thickness concentration, and cohort-wise moments (count, mean, median, standard deviation, extrema) for each target. Pearson and Spearman coefficients between $x$ and each $Y_j$ are **descriptive** in this quasi-factorial one dimensional design; they do not, by themselves, identify nonlinear or threshold mechanistics.
+## Layout under ``outputs/eda/``
 
-Symbols follow standard electrochemical usage where helpful: $R_{\mathrm{ct}}$ (charge-transfer resistance) and $Q_{\mathrm{rev}}$ (reversible capacity). Every conclusion here is a statement about the thickness response manifold in one dimension, not about latent multivariate structure. Treat this folder as an evidentiary appendix: what the measurements admit, and what they do not.
+```
+eda/
+├── README.md                 (this file)
+├── plots/                    (see ``plots/README.md`` + branch READMEs)
+│   ├── Univariate/
+│   ├── Bivariate/
+│   ├── Grouped/
+│   └── Relationships/
+└── tables/                   (see ``tables/README.md``)
+```
+
+---
+
+## Working model (descriptive only)
+
+$$
+Y_j = g_j(x) + \eta_j,\qquad j=1,\ldots,4,
+$$
+
+$g_j$ might be smooth, piecewise, or **cohort-dominated** (almost constant within each discrete $x_k$). $\eta_j$ is everything else (measurement noise, batch effects, unmodeled factors). **EDA does not assume** $\mathbb{E}[\eta_j\mid x]=0$; that is a **modeling** assumption diagnosed later under ``outputs/models/diagnostics_plots/``.
+
+---
+
+## Why discrete $x$ matters pedagogically
+
+When many cells share the same thickness, scatter plots **stack vertically**. The pipeline uses **horizontal jitter** so you can see density; a **trend line** or **IQR band by $x$** is then a visual estimate of central tendency and spread *within this sample*, not proof of a physical law. Always cross-check **grouped tables** (``05_...``, ``group_by_thickness__...``) with **Bivariate** and **Grouped** plots.
+
+---
+
+## Pipeline mapping (code references)
+
+| Stage | Source module | What is written |
+| --- | --- | --- |
+| Audit (00\_\*) | ``run_all.py`` + ``src/audit.py`` | Early tables + ``00_data_audit.xlsx`` |
+| Deep EDA | ``src/eda.py`` ``run_deep_eda()`` | ``01``--``09`` CSVs + full plot hierarchy |
+
+---
+
+## How plots and tables reinforce each other
+
+| Question | Start with table | Then open plot folder |
+| --- | --- | --- |
+| How many rows per thickness? | ``00_`` / ``03_thickness_value_counts.csv`` | (counts are tabular) |
+| Pearson/Spearman vs $x$? | ``04_thickness_target_correlations.csv`` | **Bivariate** / **Relationships** |
+| Moments by thickness | ``05_...``, ``group_by_thickness__*.csv`` | **Grouped**, **Bivariate** (IQR bands) |
+| Full association matrix | ``07_`` / ``08_`` | **Relationships** heatmaps |
+
+---
+
+## Electrochemical shorthand
+
+Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` / ``$$...$$``.

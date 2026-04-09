@@ -1,9 +1,34 @@
 # Univariate Plots
 
-Univariate views emphasize distributional shape, robust spread, and tail structure for each variable. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small, these plots are intentionally clean and avoid excessive panel counts that would reduce interpretability.
+Marginal laws of $x$ and each $Y_j$: histogram + kernel density, ECDF, box/violin/raincloud, scaling-density overlays.
 
-For distribution style plots, focus on whether the observed values cluster tightly at a small set of levels or whether the variable behaves continuously. For thickness, the concentration at the zero level is expected to be dominant, so plots should be interpreted in a mixed discrete and continuous sense. The goal is not to force a continuous narrative but to represent what the experiment actually provides.
+## Files in each ``<VarTitle>/`` subfolder
 
-On response panels, smooth traces are **estimators** of $ \hat{y}(x) $, not causal claims. They surface monotonicity, saturation, or threshold phenomenology; polynomial overlays provide an ordered family of curvature tests up to cubic order—often the decisive modeling degree of freedom when $p=1$.
+Each subfolder is one numeric column (thickness $x$ or a target $Y_j$). Typical stems (``*.png``):
 
-Annotation rules: Title Case labels, no gratuitous parentheses in display text, and Matplotlib mathtext for electrochemical symbols ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$). Companion Markdown in this repository uses GitHub `$...$` delimiters so the same expressions render in-browser without a LaTeX engine.
+- ``Histogram And Kernel Density`` -- compare **tails** and **modes** across variables; check units mentally using the axis label.
+- ``Box And Violin`` -- link **quartiles** (box) to **density** (violin wings).
+- ``Raincloud Plot`` (optional) -- every point visible; good for spotting duplicates and outliers.
+- ``Empirical Cumulative Distribution`` -- probability mass below a threshold; complements histograms for skewed data.
+- ``Scaling Comparison Density`` (optional) -- how transforms change overlap of distributions.
+
+See ``../README.md`` for the master table and column-level interpretation cues.
+
+---
+
+## Study questions (self-quiz)
+
+- Does thickness $x$ concentrate at **0 nm**? Do targets show **heavy tails** or **bounded** support?
+- Are univariate shapes **similar** across the four electrochemical targets (suggesting shared noise structure)?
+
+---
+
+## Reading guide
+
+Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+
+---
+
+## Figure style in this branch
+
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_2\mathrm{O}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.

@@ -10,16 +10,32 @@ Treat thickness as a scalar design coordinate $x$ (nanometers) and the measureme
 
 $$
 \mathbf{y}(x) =
-\bigl(
-y_{\mathrm{R_{ct}}},\;
-y_{\mathrm{ICE}},\;
-y_{Q_{\mathrm{rev}}},\;
-y_{\mathrm{retention}}
-\bigr)^{\!\top}
-\in \mathbb{R}^{4}.
+\begin{bmatrix}
+y_{\mathrm{R_{ct}}}(x) \\[0.35em]
+y_{\mathrm{ICE}}(x) \\[0.35em]
+y_{Q_{\mathrm{rev}}}(x) \\[0.35em]
+y_{\mathrm{ret}}(x)
+\end{bmatrix}
+\in \mathbb{R}^{4},
+\qquad
+x \;\text{denotes}\; \mathrm{Al}_{2}\mathrm{O}_{3}\ \text{thickness (nm).}
 $$
 
-Each algorithmic competitor estimates a map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ under the project constraint **$p=1$ feature**. Core inferential objects are therefore **univariate response curves** $\hat{y}_j(x)$, their curvature, residual structure versus $x$, and local sensitivities $\mathrm{d}\hat{y}_j / \mathrm{d}x$—not high-dimensional attribution games.
+Each fitted map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ is a **multi-output regression surface** over a 1D domain (**$p=1$**). The objects you care about are the coordinate graphs $\hat{y}_j(x)$, in-sample residuals $\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}$, and local slopes $\mathrm{d}\hat{y}_j/\mathrm{d}x$—not combinatorial feature attribution.
+
+### Error metrics (in-sample)
+
+$$
+\mathrm{MAE}_j = \frac{1}{n}\sum_{i=1}^{n} \bigl|\hat{\varepsilon}_{ij}\bigr|,
+\qquad
+\mathrm{RMSE}_j = \sqrt{\frac{1}{n}\sum_{i=1}^{n} \hat{\varepsilon}_{ij}^{2}},
+\qquad
+R^{2}_j = 1 - \frac{\sum_{i}\hat{\varepsilon}_{ij}^{2}}{\sum_{i}(y_{ij}-\bar{y}_j)^{2}}.
+$$
+
+### SHAP (optional) without waterfall clutter
+
+When the SHAP library applies to the chosen estimator, attributions follow the additive form $\hat{y} \approx \mathbb{E}[\hat{y}] + \phi(x)$ in 1D. This repository exports **beeswarm, bar, and dependence** views only—**no waterfall plots**—so figures stay legible beside dense thesis prose.
 
 > **Markdown math on GitHub:** this repository uses `$...$` (inline) and `$$...$$` (display). Plot labels use Matplotlib mathtext with the same symbols (e.g. $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$).
 
@@ -84,6 +100,8 @@ py postprocess.py
 - **`postprocess.py`** — revises comparisons / explainability / summary from saved `metrics__*.csv`.
 - **`src/`** — modular library: I/O, EDA, models, diagnostics, explainability, reporting.
 - **`outputs/**`** — hierarchical exports; each major directory carries a README interpretive index.
+- **`outputs/README.md`** — canonical directory tree, cross-links, and naming conventions for every artifact class.
+- **`src/viz_style.py`** — PERO dark theme, shared `PERO` colour palette, display labels, and legend placement used by EDA, diagnostics, and explainability figures.
 
 ---
 
@@ -137,6 +155,6 @@ SHAP, XGBoost, LightGBM, and CatBoost are **autodetected**. Missing libraries si
 
 ---
 
-## Figure quality
+## Figure quality and legends
 
-All raster/vector exports honor a unified dark PERO theme—publication contrast, consistent typographic scale, and math-aware axis labels suitable for thesis or journal submission.
+Exports use the **PERO dark theme** (navy field, high-luminance ink, Stix mathtext) with **$\mathrm{Al}_{2}\mathrm{O}_{3}$-aware** axis labels. **Legends are placed outside** the axes (`bbox_to_anchor` to the right) so scatter, ICE bundles, and KDEs stay unobstructed; correlation heatmaps use color-scale captions in $\rho$ / $\rho_s$ notation.

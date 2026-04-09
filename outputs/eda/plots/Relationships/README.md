@@ -1,9 +1,30 @@
 # Relationships Plots
 
-Relationship views emphasize correlation diagnostics among numeric variables as complementary context. Each figure is exported with consistent background and grid styling to support direct insertion into a report. Because the dataset is small, these plots are intentionally clean and avoid excessive panel counts that would reduce interpretability.
+Association matrix: heatmaps of $\rho$ and $\rho_s$ plus numeric pair plots (short axis names to avoid clutter).
 
-For distribution style plots, focus on whether the observed values cluster tightly at a small set of levels or whether the variable behaves continuously. For thickness, the concentration at the zero level is expected to be dominant, so plots should be interpreted in a mixed discrete and continuous sense. The goal is not to force a continuous narrative but to represent what the experiment actually provides.
+## Files in this folder (flat)
 
-On response panels, smooth traces are **estimators** of $ \hat{y}(x) $, not causal claims. They surface monotonicity, saturation, or threshold phenomenology; polynomial overlays provide an ordered family of curvature tests up to cubic order—often the decisive modeling degree of freedom when $p=1$.
+- ``Correlation Heatmap Pearson.png`` -- diverging **vlag** palette, annotated cells, thin grid lines for readability on dark background.
+- ``Correlation Heatmap Spearman.png`` -- rank-based analogue; compare to Pearson to detect **nonlinear monotone** coupling.
+- ``Pair Plot Numeric Variables.png`` -- optional corner **pairplot**; axis labels shortened deliberately.
 
-Annotation rules: Title Case labels, no gratuitous parentheses in display text, and Matplotlib mathtext for electrochemical symbols ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$). Companion Markdown in this repository uses GitHub `$...$` delimiters so the same expressions render in-browser without a LaTeX engine.
+**Source matrices:** ``../../tables/07_corr_pearson.csv``, ``08_corr_spearman.csv``.
+
+---
+
+## Study questions
+
+- Which off-diagonal blocks link **thickness** to each target in linear vs rank sense?
+- Do any two **targets** correlate strongly with each other (suggesting shared latent cell state beyond $x$)?
+
+---
+
+## Reading guide
+
+Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+
+---
+
+## Figure style in this branch
+
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_2\mathrm{O}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.
