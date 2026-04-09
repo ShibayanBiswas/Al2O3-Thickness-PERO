@@ -1,6 +1,6 @@
 # Relationships Plots
 
-Association matrix: heatmaps of $\rho$ and $\rho_s$ plus numeric pair plots (short axis names to avoid clutter).
+Association matrix: heatmaps of $\rho$ and $\rho_{\mathrm{s}}$ plus numeric pair plots (short axis names to avoid clutter).
 
 ## Files in this folder (flat)
 
@@ -27,4 +27,4 @@ Smooth traces are **visual aids** -- they help the eye; they do not replace form
 
 ## Figure style in this branch
 
-**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_2\mathrm{O}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_{2}\mathrm{O}_{3}$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.

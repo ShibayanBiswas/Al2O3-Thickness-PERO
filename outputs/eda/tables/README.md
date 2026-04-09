@@ -31,7 +31,7 @@ CSV / XLSX / TXT under ``outputs/eda/tables/``. Written by ``run_all.py`` (audit
 - **Audit & counts** -- dtypes, missingness, thickness mass at $x=0$.
 - **Cohort tables** -- moments stratified by each observed $x_k$.
 - **Contrasts** -- ``0`` nm vs pooled $x>0$ (diagnostic, not causal).
-- **Correlation** -- $\rho$ and $\rho_s$ matrices + thickness-vs-target vector.
+- **Correlation** -- $\rho$ and $\rho_{\mathrm{s}}$ matrices + thickness-vs-target vector.
 
 ---
 
@@ -58,7 +58,7 @@ Per-target cohort CSVs ``group_by_thickness__*.csv`` duplicate part of ``05`` in
 | --- | --- |
 | $x$ | Thickness (nm), ``Al2O3 Thickness_nm`` |
 | $Y_j$ | Target $j$ of four |
-| $\rho$, $\rho_s$ | Linear / rank association |
+| $\rho$, $\rho_{\mathrm{s}}$ | Linear / rank association |
 
 ---
 

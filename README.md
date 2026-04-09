@@ -157,4 +157,4 @@ SHAP, XGBoost, LightGBM, and CatBoost are **autodetected**. Missing libraries si
 
 ## Figure quality and legends
 
-Exports use the **PERO dark theme** (navy field, high-luminance ink, Stix mathtext) with **$\mathrm{Al}_{2}\mathrm{O}_{3}$-aware** axis labels. **Legends are placed outside** the axes (`bbox_to_anchor` to the right) so scatter, ICE bundles, and KDEs stay unobstructed; correlation heatmaps use color-scale captions in $\rho$ / $\rho_s$ notation.
+Exports use the **PERO dark theme** (navy field, high-luminance ink, Stix mathtext) with **$\mathrm{Al}_{2}\mathrm{O}_{3}$-aware** axis labels. **Legends are placed outside** the axes (`bbox_to_anchor` to the right) so scatter, ICE bundles, and KDEs stay unobstructed; correlation heatmaps use color-scale captions in $\rho/\rho_{\mathrm{s}}$ notation.

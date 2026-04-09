@@ -50,7 +50,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 | File stem | What it shows | Pedagogical note |
 | --- | --- | --- |
 | ``Correlation Heatmap Pearson`` | Pearson $\rho$ matrix | Linear alignment; weak $\rho$ can still hide strong **nonlinear** $g_j(x)$. |
-| ``Correlation Heatmap Spearman`` | Spearman $\rho_s$ | Rank association; more robust to monotone nonlinearity. |
+| ``Correlation Heatmap Spearman`` | Spearman $\rho_{\mathrm{s}}$ | Rank association; more robust to monotone nonlinearity. |
 | ``Pair Plot Numeric Variables`` | Pairwise scatter grid | Optional; axis labels shortened to reduce clutter. |
 
 ---

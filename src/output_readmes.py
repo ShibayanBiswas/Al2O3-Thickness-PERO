@@ -238,7 +238,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 | File stem | What it shows | Pedagogical note |
 | --- | --- | --- |
 | ``Correlation Heatmap Pearson`` | Pearson $\rho$ matrix | Linear alignment; weak $\rho$ can still hide strong **nonlinear** $g_j(x)$. |
-| ``Correlation Heatmap Spearman`` | Spearman $\rho_s$ | Rank association; more robust to monotone nonlinearity. |
+| ``Correlation Heatmap Spearman`` | Spearman $\rho_{\mathrm{s}}$ | Rank association; more robust to monotone nonlinearity. |
 | ``Pair Plot Numeric Variables`` | Pairwise scatter grid | Optional; axis labels shortened to reduce clutter. |
 
 ---
@@ -312,7 +312,7 @@ Stems (``*.png``):
         ),
         (
             "Relationships",
-            r"Association matrix: heatmaps of $\rho$ and $\rho_s$ plus numeric pair plots (short axis names to avoid clutter).",
+            r"Association matrix: heatmaps of $\rho$ and $\rho_{\mathrm{s}}$ plus numeric pair plots (short axis names to avoid clutter).",
             r"""## Files in this folder (flat)
 
 - ``Correlation Heatmap Pearson.png`` -- diverging **vlag** palette, annotated cells, thin grid lines for readability on dark background.
@@ -348,7 +348,7 @@ Smooth traces are **visual aids** -- they help the eye; they do not replace form
 
 ## Figure style in this branch
 
-**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{{\\mathrm{{ct}}}}$, $Q_{{\\mathrm{{rev}}}}$, $\\mathrm{{Al}}_2\\mathrm{{O}}_3$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.
+**Title Case** titles, **outside legends** on multi-series panels, mathtext on axes ($R_{{\\mathrm{{ct}}}}$, $Q_{{\\mathrm{{rev}}}}$, $\\mathrm{{Al}}_{{2}}\\mathrm{{O}}_{{3}}$). Colours follow ``PERO`` in ``src/viz_style.py`` for consistency with modelling and explainability figures.
 """,
         )
 
@@ -388,7 +388,7 @@ CSV / XLSX / TXT under ``outputs/eda/tables/``. Written by ``run_all.py`` (audit
 - **Audit & counts** -- dtypes, missingness, thickness mass at $x=0$.
 - **Cohort tables** -- moments stratified by each observed $x_k$.
 - **Contrasts** -- ``0`` nm vs pooled $x>0$ (diagnostic, not causal).
-- **Correlation** -- $\rho$ and $\rho_s$ matrices + thickness-vs-target vector.
+- **Correlation** -- $\rho$ and $\rho_{\mathrm{s}}$ matrices + thickness-vs-target vector.
 
 ---
 
@@ -415,7 +415,7 @@ Per-target cohort CSVs ``group_by_thickness__*.csv`` duplicate part of ``05`` in
 | --- | --- |
 | $x$ | Thickness (nm), ``Al2O3 Thickness_nm`` |
 | $Y_j$ | Target $j$ of four |
-| $\rho$, $\rho_s$ | Linear / rank association |
+| $\rho$, $\rho_{\mathrm{s}}$ | Linear / rank association |
 
 ---
 
