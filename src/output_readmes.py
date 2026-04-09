@@ -27,10 +27,10 @@ def _md_appendix_study_questions(*, domain: str) -> str:
     with the pipeline without duplicating thousands of words by hand.
     """
     targets = [
-        r"$R_{\mathrm{ct}}$ (Rct_initial_ohm)",
-        r"$\mathrm{ICE}$ (ICE_percent)",
-        r"$Q_{\mathrm{rev}}$ (Initial Reversible Capacity)",
-        r"Retention (Highest Capacity Retention_percent)",
+        r"$R_{\mathrm{ct}}$ (`Rct_initial_ohm`)",
+        r"$\mathrm{ICE}$ (`ICE_percent`)",
+        r"$Q_{\mathrm{rev}}$ (`Initial Reversible Capacity_mAh_g at 0.1C`)",
+        r"$\mathrm{Retention}$ (`Highest Capacity Retention_percent`)",
     ]
     families = [
         "univariate distribution",
@@ -50,10 +50,10 @@ def _md_appendix_study_questions(*, domain: str) -> str:
     # Core prompts, expanded across targets.
     core = [
         "State the scientific question being answered and the operational definition used in the pipeline.",
-        "Identify what is treated as input \(x\) and what is treated as output \(Y_j\).",
+        "Identify what is treated as input $x$ and what is treated as output $Y_j$.",
         "Explain what it would mean (in words) if the relationship is cohort-dominated rather than smooth.",
         "Describe one plausible mechanism and one non-mechanistic confound that could produce the observed pattern.",
-        "Write down the residual definition \(\\hat\\varepsilon = y-\\hat y\) and interpret its sign in context.",
+        r"Write down the residual definition $\hat\varepsilon = y-\hat y$ and interpret its sign in context.",
         "Explain why in-sample metrics can be optimistic when thickness is discrete and models can interpolate cohorts.",
         "Describe how you would validate stability if you were allowed to collect more thickness levels.",
     ]
@@ -69,8 +69,8 @@ def _md_appendix_study_questions(*, domain: str) -> str:
     # Navigation prompts.
     nav = [
         "Trace the exact file path(s) you would open to answer the question; include the README index you would consult first.",
-        "Explain how file naming uses safe_filename() and why that matters when target names contain punctuation.",
-        "Describe a minimal 'repro run': commands, what gets deleted, and which outputs are regenerated.",
+        "Explain how file naming uses `safe_filename()` and why that matters when target names contain punctuation.",
+        "Describe a minimal repro run: commands, what gets deleted, and which outputs are regenerated.",
         "Explain how the pipeline separates machine-readable tables (CSV/XLSX) from human-readable narratives (Markdown).",
     ]
     prompts.extend([f"{n} ({domain})" for n in nav])
@@ -89,11 +89,12 @@ def _md_appendix_study_questions(*, domain: str) -> str:
     out.append("")
 
     paragraph = (
-        "Answer using the pipeline’s notation: thickness is \(x\\) (nm), outcomes are \(Y_j\\), predictions are "
-        "\\(\\hat y_j(x)\\), residuals are \\(\\hat\\varepsilon_{ij}=y_{ij}-\\hat y_{ij}\\). When you reference a metric, "
-        "state its definition (e.g. \\(\\mathrm{RMSE}=\\sqrt{\\frac{1}{n}\\sum\\hat\\varepsilon^2}\\)) and identify whether "
-        "it is computed **in-sample**. When you reference a plot, name its stem (e.g. “Residuals Versus Thickness”) and "
-        "locate it under `outputs/` using the directory README indices."
+        "Answer using the pipeline’s notation: thickness is $x$ (nm), outcomes are $Y_j$, predictions are "
+        r"$\hat y_j(x)$, residuals are $\hat\varepsilon_{ij}=y_{ij}-\hat y_{ij}$. "
+        "When you reference a metric, state its definition (e.g. "
+        r"$\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum \hat\varepsilon^2}$) "
+        "and identify whether it is computed **in-sample**. When you reference a plot, name its stem "
+        "(e.g. “Residuals Versus Thickness”) and locate it under `outputs/` using the directory README indices."
     )
 
     for i, p in enumerate(prompts, start=1):
