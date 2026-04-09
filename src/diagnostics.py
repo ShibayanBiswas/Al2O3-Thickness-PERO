@@ -13,66 +13,47 @@ from .viz_style import PERO, get_display_labels, legend_outside_top_right, polis
 
 
 def qqplot_residuals(ax, residuals: np.ndarray, title: str) -> None:
-    sm = None
+    # We implement QQ directly so we can add a proper quantile-confidence "area strip".
+    # Band construction: p_i ~ Beta(i, n+1-i) (order-statistic CIs), mapped through N(0,1).
     try:
-        import statsmodels.api as sm  # type: ignore
+        from scipy import stats
     except Exception:
-        sm = None
-
-    if sm is None:
-        # Fallback: simple quantile-quantile against normal via scipy
-        try:
-            from scipy import stats
-
-            r = residuals[np.isfinite(residuals)]
-            if r.size < 3:
-                ax.text(0.5, 0.5, "Qq Plot Unavailable", ha="center", va="center")
-                ax.set_title(title)
-                return
-            (osm, osr), (slope, intercept, r_) = stats.probplot(r, dist="norm")
-            ax.scatter(osm, osr, s=30, alpha=0.8, label="Empirical quantiles")
-            x = np.asarray(osm)
-            yref = slope * x + intercept
-            yref_s = smooth_curve_1d(yref) if yref.size >= 5 else yref
-            ax.fill_between(x, yref_s - 0.02 * np.nanstd(osr), yref_s + 0.02 * np.nanstd(osr), color=PERO.qq_ref, alpha=0.12, label="Reference Band")
-            ax.plot(x, yref_s, color=PERO.qq_ref, linewidth=1.5, label="Smoothed Reference")
-            ax.set_title(title)
-            ax.set_xlabel("Theoretical Quantiles")
-            ax.set_ylabel("Ordered Residuals")
-            legend_outside_top_right(ax, title="Normal QQ")
-            return
-        except Exception:
-            ax.text(0.5, 0.5, "Qq Plot Unavailable", ha="center", va="center")
-            ax.set_title(title)
-            return
+        stats = None
 
     r = residuals[np.isfinite(residuals)]
-    if r.size < 3:
-        ax.text(0.5, 0.5, "Qq Plot Unavailable", ha="center", va="center")
+    if r.size < 3 or stats is None:
+        ax.text(0.5, 0.5, "QQ Plot Unavailable", ha="center", va="center")
         ax.set_title(title)
         return
-    sm.qqplot(r, line="45", ax=ax)
+
+    r = np.sort(np.asarray(r, dtype=float))
+    n = int(r.size)
+    i = np.arange(1, n + 1, dtype=float)
+    p = (i - 0.5) / n
+    osm = stats.norm.ppf(p)
+    osr = r
+
+    # Fit the reference line (least squares) in QQ space.
+    slope, intercept = np.polyfit(osm, osr, deg=1)
+    yref = slope * osm + intercept
+
+    # Quantile band ("area strip") via Beta order-statistic confidence limits.
+    alpha = 0.10  # 90% pointwise envelope; stable at n≈50 without being overly wide.
+    p_lo = stats.beta.ppf(alpha / 2, i, n + 1 - i)
+    p_hi = stats.beta.ppf(1 - alpha / 2, i, n + 1 - i)
+    x_lo = stats.norm.ppf(p_lo)
+    x_hi = stats.norm.ppf(p_hi)
+    y_lo = slope * x_lo + intercept
+    y_hi = slope * x_hi + intercept
+
+    ax.fill_between(osm, y_lo, y_hi, color=PERO.qq_ref, alpha=0.14, label="Quantile Band (90%)")
+    ax.plot(osm, yref, color=PERO.qq_ref, linewidth=1.5, label="Normal Reference")
+    ax.scatter(osm, osr, s=30, alpha=0.82, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.6, label="Empirical quantiles")
+
     ax.set_title(title)
     ax.set_xlabel("Theoretical quantiles")
     ax.set_ylabel("Ordered residuals")
-    legend_outside_top_right(
-        ax,
-        handles=[
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="w",
-                markerfacecolor=PERO.sky,
-                markeredgecolor=PERO.ink,
-                markersize=7,
-                linestyle="",
-                label="Empirical quantiles",
-            ),
-            Line2D([0], [0], color=PERO.text, linestyle="--", linewidth=1.5, label="Theoretical normal reference"),
-        ],
-        title="QQ diagnostic",
-    )
+    legend_outside_top_right(ax, title="QQ diagnostic")
 
 
 def diagnostic_plots_per_target(

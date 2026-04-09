@@ -17,6 +17,52 @@ class ExplainArtifacts:
     permutation_importance: pd.DataFrame | None
 
 
+def _binned_quantile_band(
+    x: np.ndarray,
+    y: np.ndarray,
+    q_lo: float = 0.10,
+    q_hi: float = 0.90,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    """
+    Quantile "area strip" for discrete/clustered x by grouping near-identical x.
+    Returns (x_sorted, qlo_smooth, qhi_smooth).
+    """
+    x = np.asarray(x, dtype=float).ravel()
+    y = np.asarray(y, dtype=float).ravel()
+    m = np.isfinite(x) & np.isfinite(y)
+    x = x[m]
+    y = y[m]
+    if x.size < 3:
+        return None
+    df = pd.DataFrame({"x": x, "y": y})
+    gq = df.groupby("x")["y"].quantile([q_lo, q_hi]).unstack()
+    gx = gq.index.to_numpy(dtype=float)
+    ql = gq[q_lo].to_numpy(dtype=float)
+    qh = gq[q_hi].to_numpy(dtype=float)
+    order = np.argsort(gx)
+    gx = gx[order]
+    ql = smooth_curve_1d(ql[order])
+    qh = smooth_curve_1d(qh[order])
+    return gx, ql, qh
+
+
+def _linear_trend(
+    x: np.ndarray,
+    y: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray] | None:
+    x = np.asarray(x, dtype=float).ravel()
+    y = np.asarray(y, dtype=float).ravel()
+    m = np.isfinite(x) & np.isfinite(y)
+    x = x[m]
+    y = y[m]
+    if x.size < 3:
+        return None
+    coefs = np.polyfit(x, y, deg=1)
+    grid = np.linspace(float(np.min(x)), float(np.max(x)), 250)
+    pred = np.polyval(coefs, grid)
+    return grid, pred
+
+
 def permutation_importance_single_feature(
     model: Any,
     X: pd.DataFrame,
@@ -109,26 +155,15 @@ def shap_explain_1d_single_output(
 
         fig, ax = plt.subplots(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
-        ax.fill_between(
-            np.sort(xvals),
-            np.quantile(svals, 0.10) * np.ones_like(np.sort(xvals)),
-            np.quantile(svals, 0.90) * np.ones_like(np.sort(xvals)),
-            color=PERO.text,
-            alpha=0.06,
-            label="Shap Band",
-        )
+        qb = _binned_quantile_band(xvals, svals, q_lo=0.10, q_hi=0.90)
+        if qb is not None:
+            gx, ql, qh = qb
+            ax.fill_between(gx, ql, qh, color=PERO.text, alpha=0.10, label="Quantile Band (10–90%)")
         ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
-        # Smooth trend of SHAP value vs thickness
-        try:
-            order = np.argsort(xvals)
-            s_ord = smooth_curve_1d(svals[order])
-            ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=1.6, label="Smoothed Trend")
-            ax.fill_between(
-                xvals[order], s_ord - np.nanstd(svals), s_ord + np.nanstd(svals), color=PERO.orange, alpha=0.08, label="Trend Band"
-            )
-            ax.fill_between(xvals[order], 0, s_ord, color=PERO.orange, alpha=0.05, label="Trend Area")
-        except Exception:
-            pass
+        lt = _linear_trend(xvals, svals)
+        if lt is not None:
+            gx, gp = lt
+            ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
 
         ax.set_title(f"{t_title} Shap Summary Beeswarm")
         ax.set_xlabel(labels.x_label)
@@ -180,29 +215,17 @@ def shap_explain_1d_single_output(
         fig, ax = plt.subplots(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
 
-        # global SHAP band
-        order = np.argsort(xvals)
-        ax.fill_between(
-            xvals[order],
-            np.quantile(svals, 0.10) * np.ones_like(xvals[order]),
-            np.quantile(svals, 0.90) * np.ones_like(xvals[order]),
-            color=PERO.text,
-            alpha=0.06,
-            label="Shap Band",
-        )
+        # quantile area strip (10–90%) grouped by thickness levels
+        qb = _binned_quantile_band(xvals, svals, q_lo=0.10, q_hi=0.90)
+        if qb is not None:
+            gxq, ql, qh = qb
+            ax.fill_between(gxq, ql, qh, color=PERO.text, alpha=0.10, label="Quantile Band (10–90%)")
         ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
 
-        s_ord = smooth_curve_1d(svals[order])
-        ax.plot(xvals[order], s_ord, color=PERO.orange, linewidth=1.6, label="Smoothed Trend")
-        ax.fill_between(
-            xvals[order],
-            s_ord - np.nanstd(svals),
-            s_ord + np.nanstd(svals),
-            color=PERO.orange,
-            alpha=0.08,
-            label="Trend Band",
-        )
-        ax.fill_between(xvals[order], 0, s_ord, color=PERO.orange, alpha=0.05, label="Trend Area")
+        lt = _linear_trend(xvals, svals)
+        if lt is not None:
+            gx, gp = lt
+            ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
 
         ax.set_title(f"{t_title} Shap Dependence")
         ax.set_xlabel(labels.x_label)

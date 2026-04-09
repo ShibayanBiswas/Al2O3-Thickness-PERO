@@ -25,7 +25,7 @@ See ``../README.md`` for the master table and column-level interpretation cues.
 
 ## Reading guide
 
-Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+Smooth traces are **visual aids** -- they help the eye; they do not replace formal model checks. In this project’s bivariate views we keep the trend line **linear** and use quantile bands to show conditional spread without overfitting the mean shape.
 
 ---
 

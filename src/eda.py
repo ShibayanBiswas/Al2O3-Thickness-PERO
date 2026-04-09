@@ -65,6 +65,36 @@ def _polynomial_fit(x: np.ndarray, y: np.ndarray, degree: int) -> tuple[np.ndarr
     return grid, pred
 
 
+def _linear_fit_with_residual_quantile_band(
+    x: np.ndarray,
+    y: np.ndarray,
+    q_lo: float = 0.10,
+    q_hi: float = 0.90,
+) -> tuple[np.ndarray, np.ndarray, float, float] | None:
+    """
+    Linear fit plus a quantile "area strip" in y induced by residual quantiles.
+
+    Returns (grid_x, y_hat_on_grid, resid_q_lo, resid_q_hi) where the band is
+    y_hat(x) + [resid_q_lo, resid_q_hi].
+    """
+    x = np.asarray(x, dtype=float).ravel()
+    y = np.asarray(y, dtype=float).ravel()
+    m = np.isfinite(x) & np.isfinite(y)
+    x = x[m]
+    y = y[m]
+    if x.size < 3:
+        return None
+    coefs = np.polyfit(x, y, deg=1)
+    grid = np.linspace(float(np.min(x)), float(np.max(x)), 250)
+    yhat_grid = np.polyval(coefs, grid)
+    resid = y - np.polyval(coefs, x)
+    rq_lo = float(np.nanquantile(resid, q_lo))
+    rq_hi = float(np.nanquantile(resid, q_hi))
+    if not (np.isfinite(rq_lo) and np.isfinite(rq_hi)):
+        return None
+    return grid, yhat_grid, rq_lo, rq_hi
+
+
 def run_deep_eda(
     df: pd.DataFrame,
     x_col: str,
@@ -307,44 +337,15 @@ def run_deep_eda(
         except Exception:
             y_lo, y_hi, y_span = 0.0, 1.0, 1.0
 
-        # Linear trend + residual band (in-sample)
+        # Linear trend + quantile area strip (residual-quantile band)
         try:
-            gx, gp = _polynomial_fit(x, yv, degree=1)
-            ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
-            ax.fill_between(gx, y_lo - 0.02 * y_span, gp, color=PERO.orange, alpha=0.045, label="Linear Trend Area")
-            pred_x = np.polyval(np.polyfit(x, yv, deg=1), x)
-            resid = yv - pred_x
-            band = float(np.nanstd(resid, ddof=1)) if np.isfinite(np.nanstd(resid, ddof=1)) else 0.0
-            if band > 0:
-                ax.fill_between(gx, gp - band, gp + band, color=PERO.orange, alpha=0.08, label="Trend Band")
-                ax.plot(gx, gp - band, color=PERO.orange, linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Lower Boundary")
-                ax.plot(gx, gp + band, color=PERO.orange, linewidth=1.0, linestyle="--", alpha=0.4, label="Trend Upper Boundary")
+            fit = _linear_fit_with_residual_quantile_band(x, yv, q_lo=0.10, q_hi=0.90)
+            if fit is not None:
+                gx, gp, rq_lo, rq_hi = fit
+                ax.fill_between(gx, gp + rq_lo, gp + rq_hi, color=PERO.orange, alpha=0.10, label="Quantile Band (10–90%)")
+                ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
         except Exception:
             pass
-
-        # Cubic trend (shape probe) + residual band
-        try:
-            gx3, gp3 = _polynomial_fit(x, yv, degree=3)
-            ax.plot(gx3, gp3, color=PERO.teal, linewidth=1.6, alpha=0.95, label="Cubic Trend")
-            ax.fill_between(gx3, y_lo - 0.02 * y_span, gp3, color=PERO.teal, alpha=0.035, label="Cubic Trend Area")
-            pred_x3 = np.polyval(np.polyfit(x, yv, deg=3), x)
-            resid3 = yv - pred_x3
-            band3 = float(np.nanstd(resid3, ddof=1)) if np.isfinite(np.nanstd(resid3, ddof=1)) else 0.0
-            if band3 > 0:
-                ax.fill_between(gx3, gp3 - band3, gp3 + band3, color=PERO.teal, alpha=0.06, label="Cubic Band")
-        except Exception:
-            pass
-
-        # LOWESS smoother (if statsmodels is available) + faint area
-        low = _lowess_xy(x, yv, frac=0.55)
-        if low is not None:
-            try:
-                xl, yl = low
-                yl_s = smooth_curve_1d(yl)
-                ax.plot(xl, yl_s, color=PERO.gold, linewidth=1.6, alpha=0.9, label="Lowess Smoother")
-                ax.fill_between(xl, y_lo - 0.02 * y_span, yl_s, color=PERO.gold, alpha=0.03, label="Lowess Area")
-            except Exception:
-                pass
 
         # Thickness rug (shows discrete support without cluttering the y-scale)
         try:
@@ -394,17 +395,16 @@ def run_deep_eda(
         polish_axes(ax)
         savefig(fig, y_dir, "Sorted Profile", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
-        # Residual-like view vs thickness (linear and cubic)
+        # Residual-like view vs thickness (linear only)
         fig, ax = with_axes(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
-        for deg, col, name in [(1, PERO.teal, "Linear Residuals"), (3, PERO.orange, "Cubic Residuals")]:
-            try:
-                coefs = np.polyfit(x, yv, deg=deg)
-                pred = np.polyval(coefs, x)
-                resid = yv - pred
-                ax.scatter(x_j, resid, alpha=0.75, s=50, label=name, color=col, edgecolor=PERO.ink, linewidth=0.7)
-            except Exception:
-                pass
+        try:
+            coefs = np.polyfit(x, yv, deg=1)
+            pred = np.polyval(coefs, x)
+            resid = yv - pred
+            ax.scatter(x_j, resid, alpha=0.75, s=50, label="Linear Residuals", color=PERO.teal, edgecolor=PERO.ink, linewidth=0.7)
+        except Exception:
+            pass
         ax.axhline(0, color=PERO.text, linewidth=1.2, alpha=0.85)
         ax.set_title(f"{y_title} Residual Pattern By Thickness")
         ax.set_xlabel(labels.x_label)

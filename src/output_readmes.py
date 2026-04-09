@@ -225,7 +225,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 | --- | --- | --- |
 | ``Scatter With Trends`` | Jittered $x$, IQR by thickness, linear trend | Jitter reveals **overlap** at repeated $x$; band describes **sample** spread, not a predictive interval. |
 | ``Sorted Profile`` | $Y_j$ sorted by $x$ | Makes non-monotone structure visible; smooth line is a **visual smoother**. |
-| ``Residual Pattern`` | Residuals from linear vs cubic fits vs $x$ | If cubic residuals still trend with $x$, a low-order polynomial is insufficient (motivates flexible models). |
+| ``Residual Pattern`` | Residuals from a linear fit vs $x$ | Persistent trends vs $x$ indicate the conditional mean is not captured by a line (motivates more flexible models). |
 
 **Grouped** (each ``<TargetTitle>/``):
 
@@ -276,14 +276,14 @@ See ``../README.md`` for the master table and column-level interpretation cues.
         ),
         (
             "Bivariate",
-            r"Conditional structure $Y_j \mid x$: jittered scatter, interquartile bands by thickness, linear/cubic residual views, sorted profiles.",
+            r"Conditional structure $Y_j \mid x$: jittered scatter, interquartile bands by thickness, linear residual view, sorted profiles.",
             r"""## Files in each ``<TargetTitle>/`` subfolder
 
 Stems (``*.png``):
 
 - ``Scatter With Trends`` -- **start here** for each target: raw pairs $(x, Y_j)$ plus trend overlays and an **IQR tube** per discrete $x$.
 - ``Sorted Profile`` -- sorts observations by $x$ so you can **trace** $Y_j$ along the experimental axis even when the scatter is dense.
-- ``Residual Pattern`` -- subtracts low-order polynomial structure; **systematic** residual trends vs $x$ mean the conditional mean is not captured by a line or cubic.
+- ``Residual Pattern`` -- subtracts linear structure; **systematic** residual trends vs $x$ mean the conditional mean is not captured by a line.
 
 **Companion table:** ``../../tables/group_by_thickness__<TargetSafe>.csv`` (exact cohort $n$, mean, std).
 
@@ -342,7 +342,7 @@ Stems (``*.png``):
 
 ## Reading guide
 
-Smooth traces are **nonparametric aids** -- they help the eye; they do not replace formal model checks. Polynomial overlays (through cubic) in bivariate views form a **nested** family: each step relaxes linearity.
+Smooth traces are **visual aids** -- they help the eye; they do not replace formal model checks. In this project’s bivariate views we keep the trend line **linear** and use quantile bands to show conditional spread without overfitting the mean shape.
 
 ---
 

@@ -37,7 +37,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 | --- | --- | --- |
 | ``Scatter With Trends`` | Jittered $x$, IQR by thickness, linear trend | Jitter reveals **overlap** at repeated $x$; band describes **sample** spread, not a predictive interval. |
 | ``Sorted Profile`` | $Y_j$ sorted by $x$ | Makes non-monotone structure visible; smooth line is a **visual smoother**. |
-| ``Residual Pattern`` | Residuals from linear vs cubic fits vs $x$ | If cubic residuals still trend with $x$, a low-order polynomial is insufficient (motivates flexible models). |
+| ``Residual Pattern`` | Residuals from a linear fit vs $x$ | Persistent trends vs $x$ indicate the conditional mean is not captured by a line (motivates more flexible models). |
 
 **Grouped** (each ``<TargetTitle>/``):
 
