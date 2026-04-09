@@ -9,16 +9,16 @@ A **PERO-grade** workflow (polished, export-ready, reproducible, organized) for 
 Treat thickness as a scalar design coordinate $x$ (nanometers) and the measurements as a vector response
 
 $$
-\mathbf{y}(x) =
-\begin{bmatrix}
-y_{\mathrm{R_{ct}}}(x) \\[0.35em]
-y_{\mathrm{ICE}}(x) \\[0.35em]
-y_{Q_{\mathrm{rev}}}(x) \\[0.35em]
+\mathbf{y}(x)
+=
+\bigl(
+y_{R_{\mathrm{ct}}}(x),\;
+y_{\mathrm{ICE}}(x),\;
+y_{Q_{\mathrm{rev}}}(x),\;
 y_{\mathrm{ret}}(x)
-\end{bmatrix}
+\bigr)^{\top}
 \in \mathbb{R}^{4},
-\qquad
-x \;\text{denotes}\; \mathrm{Al}_{2}\mathrm{O}_{3}\ \text{thickness (nm).}
+\qquad x\ \text{is }\mathrm{Al}_{2}\mathrm{O}_{3}\text{ thickness (nm).}
 $$
 
 Each fitted map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ is a **multi-output regression surface** over a 1D domain (**$p=1$**). The objects you care about are the coordinate graphs $\hat{y}_j(x)$, in-sample residuals $\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}$, and local slopes $\mathrm{d}\hat{y}_j/\mathrm{d}x$—not combinatorial feature attribution.
