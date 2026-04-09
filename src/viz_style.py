@@ -122,8 +122,8 @@ def apply_pero_theme(cfg: object) -> None:
             "xtick.minor.visible": True,
             "ytick.minor.visible": True,
             "grid.color": p.grid_major,
-            "grid.alpha": 0.62,
-            "grid.linewidth": 1.05,
+            "grid.alpha": 0.78,
+            "grid.linewidth": 1.25,
             "grid.linestyle": "-",
             "axes.titleweight": "semibold",
             "axes.titlesize": 16,
@@ -138,11 +138,12 @@ def apply_pero_theme(cfg: object) -> None:
             "legend.shadow": False,
             "legend.borderpad": 0.5,
             "legend.labelspacing": 0.55,
-            "lines.linewidth": 2.55,
-            "lines.markersize": 7.2,
+            # Slightly thinner strokes for a cleaner scientific feel.
+            "lines.linewidth": 1.85,
+            "lines.markersize": 6.6,
             "lines.antialiased": True,
             "patch.edgecolor": p.ink,
-            "patch.linewidth": 0.85,
+            "patch.linewidth": 0.75,
             "scatter.edgecolors": p.ink,
             "font.family": "DejaVu Sans",
             "font.size": 11,
@@ -155,12 +156,12 @@ def apply_pero_theme(cfg: object) -> None:
         base.update(
             {
                 "grid.major.color": p.grid_major,
-                "grid.major.alpha": 0.62,
-                "grid.major.linewidth": 1.05,
+                "grid.major.alpha": 0.78,
+                "grid.major.linewidth": 1.25,
                 "grid.major.linestyle": "-",
                 "grid.minor.color": p.grid_minor,
-                "grid.minor.alpha": 0.42,
-                "grid.minor.linewidth": 0.7,
+                "grid.minor.alpha": 0.52,
+                "grid.minor.linewidth": 0.85,
                 "grid.minor.linestyle": "-",
             }
         )
@@ -173,12 +174,12 @@ def polish_axes(ax) -> None:
         spine.set_linewidth(1.05)
         spine.set_color(PERO.axis)
         spine.set_alpha(0.92)
-    ax.grid(True, which="major", alpha=0.62, linewidth=1.05, color=PERO.grid_major)
+    ax.grid(True, which="major", alpha=0.78, linewidth=1.25, color=PERO.grid_major)
     try:
         ax.minorticks_on()
         ax.tick_params(which="major", length=5, width=1.0, colors=PERO.text, labelcolor=PERO.text)
         ax.tick_params(which="minor", length=2.5, width=0.7, colors=PERO.text, labelsize=9)
-        ax.grid(True, which="minor", alpha=0.42, linewidth=0.7, color=PERO.grid_minor)
+        ax.grid(True, which="minor", alpha=0.52, linewidth=0.85, color=PERO.grid_minor)
     except Exception:
         ax.tick_params(colors=PERO.text, labelcolor=PERO.text)
 
