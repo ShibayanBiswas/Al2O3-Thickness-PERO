@@ -158,7 +158,7 @@ def shap_explain_1d_single_output(
         qb = _binned_quantile_band(xvals, svals, q_lo=0.10, q_hi=0.90)
         if qb is not None:
             gx, ql, qh = qb
-            ax.fill_between(gx, ql, qh, color=PERO.text, alpha=0.10, label="Quantile Band (10–90%)")
+            ax.fill_between(gx, ql, qh, color=PERO.text, alpha=0.10, label="_nolegend_")
         ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
         lt = _linear_trend(xvals, svals)
         if lt is not None:
@@ -219,7 +219,7 @@ def shap_explain_1d_single_output(
         qb = _binned_quantile_band(xvals, svals, q_lo=0.10, q_hi=0.90)
         if qb is not None:
             gxq, ql, qh = qb
-            ax.fill_between(gxq, ql, qh, color=PERO.text, alpha=0.10, label="Quantile Band (10–90%)")
+            ax.fill_between(gxq, ql, qh, color=PERO.text, alpha=0.10, label="_nolegend_")
         ax.scatter(xj, svals, s=62, alpha=0.8, color=PERO.sky, edgecolor=PERO.ink, linewidth=0.75, label="Shap Values")
 
         lt = _linear_trend(xvals, svals)
@@ -409,12 +409,12 @@ def local_sensitivity_curve(
         polish_axes(ax)
 
         # Slope panel with shaded magnitude band
-        axs.fill_between(x_grid, 0, dydx_s, color=PERO.red, alpha=0.12, label="Slope Area")
+        axs.fill_between(x_grid, 0, dydx_s, color=PERO.red, alpha=0.12, label="_nolegend_")
         axs.plot(x_grid, dydx_s, linewidth=1.5, color=PERO.red, label="Local Slope")
         for xi, yi in zip(x_grid, dydx_s, strict=False):
             sens_rows.append({"layer": "slope", "x": float(xi), "y": float(yi)})
         sspan = float(np.nanmax(dydx_s) - np.nanmin(dydx_s) + 1e-12)
-        axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color=PERO.red, alpha=0.06, label="Slope Band")
+        axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color=PERO.red, alpha=0.06, label="_nolegend_")
         axs.set_xlabel(labels.x_label)
         axs.set_ylabel(r"Local slope $\mathrm{d}\hat{y}/\mathrm{d}x$")
         legend_outside_top_right(axs, ncol=1, title="Sensitivity")

@@ -257,7 +257,7 @@ def apply_sexy_shadows(ax) -> None:
         t.set_path_effects(
             [
                 pe.SimpleLineShadow(offset=(1.2, -1.2), alpha=0.35, shadow_color=PERO.ink),
-                pe.withStroke(linewidth=2.6, foreground=PERO.ink, alpha=0.75),
+                pe.withStroke(linewidth=1.6, foreground=PERO.ink, alpha=0.70),
                 pe.Normal(),
             ]
         )
@@ -267,20 +267,20 @@ def apply_sexy_shadows(ax) -> None:
     # Lines: a faint stroke behind to "lift" the curve
     for ln in getattr(ax, "lines", []):
         try:
-            ln.set_path_effects([pe.withStroke(linewidth=ln.get_linewidth() + 1.6, foreground=PERO.ink, alpha=0.55), pe.Normal()])
+            ln.set_path_effects([pe.withStroke(linewidth=ln.get_linewidth() + 0.9, foreground=PERO.ink, alpha=0.45), pe.Normal()])
         except Exception:
             pass
 
     # Collections (scatter): subtle stroke (works on PathCollection)
     for coll in getattr(ax, "collections", []):
         try:
-            coll.set_path_effects([pe.withStroke(linewidth=2.0, foreground=PERO.ink, alpha=0.35), pe.Normal()])
+            coll.set_path_effects([pe.withStroke(linewidth=1.2, foreground=PERO.ink, alpha=0.28), pe.Normal()])
         except Exception:
             pass
 
     # Patches (bars, filled areas): soft outline
     for patch in getattr(ax, "patches", []):
         try:
-            patch.set_path_effects([pe.withStroke(linewidth=2.0, foreground=PERO.ink, alpha=0.25), pe.Normal()])
+            patch.set_path_effects([pe.withStroke(linewidth=1.2, foreground=PERO.ink, alpha=0.20), pe.Normal()])
         except Exception:
             pass
