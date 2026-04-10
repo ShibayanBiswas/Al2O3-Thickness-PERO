@@ -11,7 +11,7 @@ We estimate vector maps
 $$
 \hat{\mathbf{f}}:\ \mathbb{R}_{\ge 0} \rightarrow \mathbb{R}^{4},
 \qquad
-\hat{\mathbf{f}}(x) = \bigl(\hat{f}_{1}(x),\ldots,\hat{f}_{4}(x)\bigr)^{\!\top},
+\hat{\mathbf{f}}(x) = \bigl(\hat{f}_{1}(x),\ldots,\hat{f}_{4}(x)\bigr)^{\top},
 $$
 
 where $x$ is **`Al2O3 Thickness_nm`** expressed in nm. Every plotting helper assumes **outside legends** and **Stix mathtext** so on-screen symbols match GitHub `$...$` Markdown.
