@@ -95,6 +95,28 @@ def _linear_fit_with_residual_quantile_band(
     return grid, yhat_grid, rq_lo, rq_hi
 
 
+def _group_quantiles_by_x(
+    df: pd.DataFrame,
+    x_col: str,
+    y_col: str,
+    qs: tuple[float, ...] = (0.10, 0.50, 0.90),
+) -> tuple[np.ndarray, dict[float, np.ndarray]] | None:
+    """
+    Per-thickness quantiles for discrete x, returned as sorted arrays.
+    """
+    try:
+        gq = df.groupby(x_col)[y_col].quantile(list(qs)).unstack()
+        gx = gq.index.to_numpy(dtype=float)
+        order = np.argsort(gx)
+        gx = gx[order]
+        out: dict[float, np.ndarray] = {}
+        for q in qs:
+            out[q] = gq[q].to_numpy(dtype=float)[order]
+        return gx, out
+    except Exception:
+        return None
+
+
 def run_deep_eda(
     df: pd.DataFrame,
     x_col: str,
@@ -321,10 +343,10 @@ def run_deep_eda(
             q75s = smooth_curve_1d(q75[order])
             q50s = smooth_curve_1d(q50[order])
             gxo = gx[order]
-            ax.fill_between(gxo, q25s, q75s, color=PERO.text, alpha=0.08, label="Interquartile Band")
-            ax.plot(gxo, q50s, color=PERO.green, linewidth=1.6, label="Median By Thickness")
-            ax.plot(gxo, q25s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Lower")
-            ax.plot(gxo, q75s, color=PERO.green, linewidth=1.1, linestyle="--", alpha=0.45, label="Quartile Upper")
+            ax.fill_between(gxo, q25s, q75s, color=PERO.text, alpha=0.08, label="_nolegend_")
+            ax.plot(gxo, q50s, color=PERO.green, linewidth=1.20, label="Median By Thickness")
+            ax.plot(gxo, q25s, color=PERO.green, linewidth=0.85, linestyle="--", alpha=0.45, label="_nolegend_")
+            ax.plot(gxo, q75s, color=PERO.green, linewidth=0.85, linestyle="--", alpha=0.45, label="_nolegend_")
         except Exception:
             pass
 
@@ -342,15 +364,15 @@ def run_deep_eda(
             fit = _linear_fit_with_residual_quantile_band(x, yv, q_lo=0.10, q_hi=0.90)
             if fit is not None:
                 gx, gp, rq_lo, rq_hi = fit
-                ax.fill_between(gx, gp + rq_lo, gp + rq_hi, color=PERO.orange, alpha=0.10, label="Quantile Band (10–90%)")
-                ax.plot(gx, gp, color=PERO.orange, linewidth=1.6, label="Linear Trend")
+                ax.fill_between(gx, gp + rq_lo, gp + rq_hi, color=PERO.orange, alpha=0.10, label="_nolegend_")
+                ax.plot(gx, gp, color=PERO.orange, linewidth=1.25, label="Linear Trend")
         except Exception:
             pass
 
         # Thickness rug (shows discrete support without cluttering the y-scale)
         try:
             rug_y = y_lo - 0.04 * y_span
-            ax.scatter(x, np.full_like(x, rug_y, dtype=float), s=16, alpha=0.35, color=PERO.text, edgecolor=PERO.ink, linewidth=0.4, label="Thickness Rug")
+            ax.scatter(x, np.full_like(x, rug_y, dtype=float), s=14, alpha=0.30, color=PERO.text, edgecolor=PERO.ink, linewidth=0.35, label="_nolegend_")
         except Exception:
             pass
 
@@ -369,7 +391,7 @@ def run_deep_eda(
         xs = x[order]
         ys = yv[order]
         ys_s = smooth_curve_1d(ys)
-        ax.plot(xs, ys_s, linewidth=1.6, color=PERO.sky, label="Smoothed Profile")
+        ax.plot(xs, ys_s, linewidth=1.35, color=PERO.sky, label="Smoothed Profile")
         span = float(np.nanmax(ys_s) - np.nanmin(ys_s) + 1e-9)
         y_floor = float(np.nanmin(ys_s) - 0.03 * span)
         ax.fill_between(xs, y_floor, ys_s, color=PERO.sky, alpha=0.08, label="Profile Area")
@@ -382,8 +404,8 @@ def run_deep_eda(
             q25s = smooth_curve_1d(q25)
             q75s = smooth_curve_1d(q75)
             meds = smooth_curve_1d(med)
-            ax.fill_between(xs, q25s, q75s, color=PERO.text, alpha=0.10, label="Interquartile Band")
-            ax.plot(xs, meds, color=PERO.green, linewidth=1.6, label="Rolling Median")
+            ax.fill_between(xs, q25s, q75s, color=PERO.text, alpha=0.10, label="_nolegend_")
+            ax.plot(xs, meds, color=PERO.green, linewidth=1.25, label="Rolling Median")
             ax.plot(xs, q25s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Lower")
             ax.plot(xs, q75s, color=PERO.green, linewidth=1.0, linestyle="--", alpha=0.4, label="Rolling Upper")
         except Exception:
@@ -402,7 +424,7 @@ def run_deep_eda(
             coefs = np.polyfit(x, yv, deg=1)
             pred = np.polyval(coefs, x)
             resid = yv - pred
-            ax.scatter(x_j, resid, alpha=0.75, s=50, label="Linear Residuals", color=PERO.teal, edgecolor=PERO.ink, linewidth=0.7)
+            ax.scatter(x_j, resid, alpha=0.75, s=46, label="Linear Residuals", color=PERO.teal, edgecolor=PERO.ink, linewidth=0.6)
         except Exception:
             pass
         ax.axhline(0, color=PERO.text, linewidth=1.2, alpha=0.85)
@@ -442,10 +464,17 @@ def run_deep_eda(
         mu_s = smooth_curve_1d(mu)
         lo_s = smooth_curve_1d(mu - sg)
         hi_s = smooth_curve_1d(mu + sg)
-        ax.fill_between(gx, lo_s, hi_s, color=PERO.green, alpha=0.14, label="Uncertainty Band")
-        ax.plot(gx, mu_s, linestyle="-", linewidth=1.6, color=PERO.green, label="Mean Curve")
-        ax.plot(gx, lo_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Lower Boundary")
-        ax.plot(gx, hi_s, linestyle="--", linewidth=1.2, color=PERO.green, alpha=0.55, label="Upper Boundary")
+        qpack = _group_quantiles_by_x(df, x_col=x_col, y_col=y, qs=(0.10, 0.50, 0.90))
+        if qpack is not None:
+            gx_q, qd = qpack
+            q10 = smooth_curve_1d(qd[0.10])
+            q50 = smooth_curve_1d(qd[0.50])
+            q90 = smooth_curve_1d(qd[0.90])
+            ax.fill_between(gx_q, q10, q90, color=PERO.text, alpha=0.10, label="_nolegend_")
+            ax.plot(gx_q, q50, linestyle="-", linewidth=1.25, color=PERO.green, label="Median Curve")
+        else:
+            ax.fill_between(gx, lo_s, hi_s, color=PERO.text, alpha=0.10, label="_nolegend_")
+            ax.plot(gx, mu_s, linestyle="-", linewidth=1.25, color=PERO.green, label="Mean Curve")
         ax.set_title(f"{y_title} Group Mean With Uncertainty")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
@@ -528,9 +557,9 @@ def run_deep_eda(
         ax=ax,
         linewidths=0.55,
         linecolor=PERO.panel,
-        cbar_kws={"shrink": 0.85, "label": r"Spearman $\rho_s$"},
+        cbar_kws={"shrink": 0.85, "label": r"Spearman $\rho_{\mathrm{s}}$"},
     )
-    ax.set_title(r"Correlation heatmap: Spearman $\rho_s$")
+    ax.set_title(r"Correlation heatmap: Spearman $\rho_{\mathrm{s}}$")
     ax.tick_params(axis="x", labelrotation=28, labelsize=10)
     ax.tick_params(axis="y", labelrotation=0, labelsize=10)
     for lab in ax.get_xticklabels():

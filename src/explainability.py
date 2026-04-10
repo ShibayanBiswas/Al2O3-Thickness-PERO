@@ -268,23 +268,24 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
         fig, ax = plt.subplots(figsize=(7.5, 7.5))
         set_dark_background(fig, ax)
 
-        # ICE lines as bootstrapped response curves
+        # ICE lines as bootstrapped response curves (keep light + sparse; focus on PDP)
         if band is not None and band.shape[2] > j:
-            for k in range(min(25, band.shape[0])):
-                ax.plot(x_grid, smooth_curve_1d(band[k, :, j]), color=PERO.text, alpha=0.10, linewidth=1.0)
+            for k in range(min(10, band.shape[0])):
+                ax.plot(
+                    x_grid,
+                    smooth_curve_1d(band[k, :, j]),
+                    color=PERO.text,
+                    alpha=0.07,
+                    linewidth=0.85,
+                )
             q10 = np.nanpercentile(band[:, :, j], 10, axis=0)
             q90 = np.nanpercentile(band[:, :, j], 90, axis=0)
             q10s = smooth_curve_1d(q10)
             q90s = smooth_curve_1d(q90)
-            ax.fill_between(x_grid, q10s, q90s, color=PERO.text, alpha=0.10, label="ICE Band")
-            ax.plot(x_grid, q10s, color=PERO.text, linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Lower Boundary")
-            ax.plot(x_grid, q90s, color=PERO.text, linewidth=1.15, linestyle="--", alpha=0.55, label="ICE Upper Boundary")
+            ax.fill_between(x_grid, q10s, q90s, color=PERO.text, alpha=0.11, label="_nolegend_")
 
         pdp_line = smooth_curve_1d(Yg[:, j])
-        ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=1.6, label="Partial Dependence")
-        span = float(np.nanmax(pdp_line) - np.nanmin(pdp_line) + 1e-9)
-        y_floor = float(np.nanmin(pdp_line) - 0.04 * span)
-        ax.fill_between(x_grid, y_floor, pdp_line, color=PERO.sky, alpha=0.07, label="Response Area")
+        ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=1.35, label="Partial Dependence")
         ax.set_title(f"{t_title} Partial Dependence And ICE")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
@@ -383,14 +384,14 @@ def local_sensitivity_curve(
         if band is not None and band.shape[2] > j:
             q10_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 10, axis=0))
             q90_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 90, axis=0))
-            ax.fill_between(x_grid, q10_u, q90_u, color=PERO.text, alpha=0.10, label="Uncertainty Band")
-            ax.plot(x_grid, q10_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Lower")
-            ax.plot(x_grid, q90_u, color=PERO.sky, linewidth=1.15, linestyle="--", alpha=0.55, label="Uncertainty Upper")
+            ax.fill_between(x_grid, q10_u, q90_u, color=PERO.text, alpha=0.10, label="_nolegend_")
+            ax.plot(x_grid, q10_u, color=PERO.sky, linewidth=0.95, linestyle="--", alpha=0.55, label="_nolegend_")
+            ax.plot(x_grid, q90_u, color=PERO.sky, linewidth=0.95, linestyle="--", alpha=0.55, label="_nolegend_")
 
-        ax.plot(x_grid, yg_s, linewidth=1.6, color=PERO.sky, label="Predicted Response")
+        ax.plot(x_grid, yg_s, linewidth=1.35, color=PERO.sky, label="Predicted Response")
         span_y = float(np.nanmax(yg_s) - np.nanmin(yg_s) + 1e-9)
         y_lo_fill = float(np.nanmin(yg_s) - 0.04 * span_y)
-        ax.fill_between(x_grid, y_lo_fill, yg_s, color=PERO.sky, alpha=0.08, label="Response Fill")
+        ax.fill_between(x_grid, y_lo_fill, yg_s, color=PERO.sky, alpha=0.07, label="_nolegend_")
         ax.set_title(f"{t_title} Sensitivity Curve")
         ax.set_ylabel(y_label)
         legend_outside_top_right(ax, ncol=1, title="Response")
