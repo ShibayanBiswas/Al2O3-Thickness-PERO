@@ -8,6 +8,26 @@ import matplotlib.pyplot as plt
 from .utils import ensure_dir, safe_filename
 
 
+def save_plot_csv(out_dir: Path, name: str, rows: list[dict]) -> Path | None:
+    """
+    Save plot data next to the exported figure as a CSV.
+
+    Format is intentionally "tidy long" (one row per point/sample/curve vertex),
+    so different series lengths can coexist in one file.
+    """
+    try:
+        import pandas as pd
+    except Exception:
+        return None
+    try:
+        ensure_dir(out_dir)
+        out_path = out_dir / f"{safe_filename(name)}.csv"
+        pd.DataFrame(rows).to_csv(out_path, index=False)
+        return out_path
+    except Exception:
+        return None
+
+
 def scatter_with_marginals(
     x,
     y,

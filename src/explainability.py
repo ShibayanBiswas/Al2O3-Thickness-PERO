@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from .plots import savefig, scatter_with_marginals, with_axes
+from .plots import save_plot_csv, savefig, scatter_with_marginals, with_axes
 from .utils import ensure_dir, optional_import, safe_filename, smooth_curve_1d, strip_parentheses_text, to_title_case
 from .viz_style import PERO, get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
@@ -269,6 +269,7 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
         set_dark_background(fig, ax)
 
         # ICE lines as bootstrapped response curves (keep light + sparse; focus on PDP)
+        pdp_rows: list[dict] = []
         if band is not None and band.shape[2] > j:
             for k in range(min(10, band.shape[0])):
                 ax.plot(
@@ -283,14 +284,19 @@ def pdp_ice_1d(model: Any, X: pd.DataFrame, y_cols: list[str], out_plots: Path, 
             q10s = smooth_curve_1d(q10)
             q90s = smooth_curve_1d(q90)
             ax.fill_between(x_grid, q10s, q90s, color=PERO.text, alpha=0.11, label="_nolegend_")
+            for xi, lo, hi in zip(x_grid, q10s, q90s, strict=False):
+                pdp_rows.append({"layer": "ice_band_10_90", "x": float(xi), "y_lo": float(lo), "y_hi": float(hi)})
 
         pdp_line = smooth_curve_1d(Yg[:, j])
         ax.plot(x_grid, pdp_line, color=PERO.sky, linewidth=1.35, label="Partial Dependence")
+        for xi, yi in zip(x_grid, pdp_line, strict=False):
+            pdp_rows.append({"layer": "pdp", "x": float(xi), "y": float(yi)})
         ax.set_title(f"{t_title} Partial Dependence And ICE")
         ax.set_xlabel(labels.x_label)
         ax.set_ylabel(y_label)
         legend_outside_top_right(ax, ncol=1, title="PDP / ICE")
         polish_axes(ax)
+        save_plot_csv(out_plots, f"Partial Dependence And ICE__{target}", pdp_rows)
         saved.append(savefig(fig, out_plots, f"Partial Dependence And ICE__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
 
     return saved
@@ -381,14 +387,19 @@ def local_sensitivity_curve(
         set_dark_background(fig, [ax, axs])
 
         q10_u = q90_u = None
+        sens_rows: list[dict] = []
         if band is not None and band.shape[2] > j:
             q10_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 10, axis=0))
             q90_u = smooth_curve_1d(np.nanpercentile(band[:, :, j], 90, axis=0))
             ax.fill_between(x_grid, q10_u, q90_u, color=PERO.text, alpha=0.10, label="_nolegend_")
             ax.plot(x_grid, q10_u, color=PERO.sky, linewidth=0.95, linestyle="--", alpha=0.55, label="_nolegend_")
             ax.plot(x_grid, q90_u, color=PERO.sky, linewidth=0.95, linestyle="--", alpha=0.55, label="_nolegend_")
+            for xi, lo, hi in zip(x_grid, q10_u, q90_u, strict=False):
+                sens_rows.append({"layer": "response_band_10_90", "x": float(xi), "y_lo": float(lo), "y_hi": float(hi)})
 
         ax.plot(x_grid, yg_s, linewidth=1.35, color=PERO.sky, label="Predicted Response")
+        for xi, yi in zip(x_grid, yg_s, strict=False):
+            sens_rows.append({"layer": "response", "x": float(xi), "y": float(yi)})
         span_y = float(np.nanmax(yg_s) - np.nanmin(yg_s) + 1e-9)
         y_lo_fill = float(np.nanmin(yg_s) - 0.04 * span_y)
         ax.fill_between(x_grid, y_lo_fill, yg_s, color=PERO.sky, alpha=0.07, label="_nolegend_")
@@ -400,6 +411,8 @@ def local_sensitivity_curve(
         # Slope panel with shaded magnitude band
         axs.fill_between(x_grid, 0, dydx_s, color=PERO.red, alpha=0.12, label="Slope Area")
         axs.plot(x_grid, dydx_s, linewidth=1.5, color=PERO.red, label="Local Slope")
+        for xi, yi in zip(x_grid, dydx_s, strict=False):
+            sens_rows.append({"layer": "slope", "x": float(xi), "y": float(yi)})
         sspan = float(np.nanmax(dydx_s) - np.nanmin(dydx_s) + 1e-12)
         axs.fill_between(x_grid, dydx_s - 0.04 * sspan, dydx_s + 0.04 * sspan, color=PERO.red, alpha=0.06, label="Slope Band")
         axs.set_xlabel(labels.x_label)
@@ -407,6 +420,7 @@ def local_sensitivity_curve(
         legend_outside_top_right(axs, ncol=1, title="Sensitivity")
         polish_axes(axs)
 
+        save_plot_csv(out_plots, f"Sensitivity Curve__{target}", sens_rows)
         saved.append(savefig(fig, out_plots, f"Sensitivity Curve__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
     return saved
 

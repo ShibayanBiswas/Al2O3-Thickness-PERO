@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-from .plots import annotate_extremes, savefig, scatter_with_marginals, with_axes
+from .plots import annotate_extremes, save_plot_csv, savefig, scatter_with_marginals, with_axes
 from .utils import (
     ensure_dir,
     iqr_outliers,
@@ -331,6 +331,10 @@ def run_deep_eda(
         set_dark_background(fig, ax)
         ax.scatter(x_j, yv, alpha=0.82, s=64, edgecolor=PERO.ink, linewidth=0.8, label="Observed Points", color=PERO.sky)
 
+        plot_rows: list[dict] = []
+        for xi, yi in zip(x, yv, strict=False):
+            plot_rows.append({"layer": "points", "x": float(xi), "y": float(yi)})
+
         # Mandatory area shade based on thickness-level quartiles
         try:
             gq = df.groupby(x_col)[y].quantile([0.25, 0.5, 0.75]).unstack()
@@ -347,6 +351,9 @@ def run_deep_eda(
             ax.plot(gxo, q50s, color=PERO.green, linewidth=1.20, label="Median By Thickness")
             ax.plot(gxo, q25s, color=PERO.green, linewidth=0.85, linestyle="--", alpha=0.45, label="_nolegend_")
             ax.plot(gxo, q75s, color=PERO.green, linewidth=0.85, linestyle="--", alpha=0.45, label="_nolegend_")
+            for xi, lo, mid, hi in zip(gxo, q25s, q50s, q75s, strict=False):
+                plot_rows.append({"layer": "x_iqr_band", "x": float(xi), "y_lo": float(lo), "y_hi": float(hi)})
+                plot_rows.append({"layer": "x_median", "x": float(xi), "y": float(mid)})
         except Exception:
             pass
 
@@ -366,6 +373,10 @@ def run_deep_eda(
                 gx, gp, rq_lo, rq_hi = fit
                 ax.fill_between(gx, gp + rq_lo, gp + rq_hi, color=PERO.orange, alpha=0.10, label="_nolegend_")
                 ax.plot(gx, gp, color=PERO.orange, linewidth=1.25, label="Linear Trend")
+                for xi, yi in zip(gx, gp, strict=False):
+                    plot_rows.append({"layer": "linear_trend", "x": float(xi), "y": float(yi)})
+                for xi, lo, hi in zip(gx, gp + rq_lo, gp + rq_hi, strict=False):
+                    plot_rows.append({"layer": "linear_trend_band_10_90", "x": float(xi), "y_lo": float(lo), "y_hi": float(hi)})
         except Exception:
             pass
 
@@ -382,6 +393,7 @@ def run_deep_eda(
         ax.set_ylabel(y_label)
         legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
+        save_plot_csv(y_dir, "Scatter With Trends", plot_rows)
         savefig(fig, y_dir, "Scatter With Trends", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Sorted-by-thickness line plot
@@ -415,6 +427,8 @@ def run_deep_eda(
         ax.set_ylabel(y_label)
         legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
+        sp_rows: list[dict] = [{"layer": "smoothed_profile", "x": float(xi), "y": float(yi)} for xi, yi in zip(xs, ys_s, strict=False)]
+        save_plot_csv(y_dir, "Sorted Profile", sp_rows)
         savefig(fig, y_dir, "Sorted Profile", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Residual-like view vs thickness (linear only)
@@ -433,6 +447,13 @@ def run_deep_eda(
         ax.set_ylabel("Residual")
         legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
+        rp_rows: list[dict] = []
+        try:
+            for xi, ri in zip(x, resid, strict=False):
+                rp_rows.append({"layer": "residuals", "x": float(xi), "y": float(ri)})
+        except Exception:
+            pass
+        save_plot_csv(y_dir, "Residual Pattern", rp_rows)
         savefig(fig, y_dir, "Residual Pattern", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
         # Binned summary by thickness levels (since x is discrete, group-by exact x)
@@ -481,6 +502,15 @@ def run_deep_eda(
         legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
         y_dir = ensure_dir(out_grp / safe_filename(y_title))
+        gm_rows: list[dict] = []
+        if qpack is not None:
+            for xi, lo, mid, hi in zip(gx_q, q10, q50, q90, strict=False):
+                gm_rows.append({"layer": "quantile_band_10_90", "x": float(xi), "y_lo": float(lo), "y_hi": float(hi)})
+                gm_rows.append({"layer": "median", "x": float(xi), "y": float(mid)})
+        else:
+            for xi, yi in zip(gx, mu_s, strict=False):
+                gm_rows.append({"layer": "mean", "x": float(xi), "y": float(yi)})
+        save_plot_csv(y_dir, "Group Mean With Uncertainty", gm_rows)
         savefig(fig, y_dir, "Group Mean With Uncertainty", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
 
     # Compare 0.0 vs non-zero
