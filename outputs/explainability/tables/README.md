@@ -41,7 +41,7 @@ with $\pi$ a random permutation of the thickness column.
 | $\Delta R^2_j$ | Reading |
 | --- | --- |
 | Large | Fit leans on authentic ordering of $x$ |
-| Tiny | Thickness weak in-sample or noise-dominated |
+| Tiny | Thickness weak on the training sample or noise-dominated |
 
 Pair with PDP/ICE and (if present) SHAP $|\phi|$ --- tables encode **stability**, curves encode **shape**.
 

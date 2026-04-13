@@ -1,0 +1,23 @@
+model,best_cv_r2_primary,rank_by_cv_r2
+Decision Tree,-6.203192601941192,1
+Gradient Boosting,-8.333298166588406,2
+Support Vector Regression,-13.07180952164374,3
+Adaptive Boosting,-16.182575885878514,4
+K Nearest Neighbors Three,-53.511185411566885,5
+K Nearest Neighbors Five,-53.511185411566885,6
+Extra Trees,-65.83119668543785,7
+Polynomial Ridge Degree 3,-71.27210462986977,8
+Random Forest,-78.72388439165822,9
+Polynomial Ridge Degree 2,-82.77737279717984,10
+Bagging Regressor,-87.06710078229476,11
+Lasso Regression,-93.55889256964585,12
+Elastic Net Regression,-94.69230057569166,13
+Light Gradient Boosting,-95.46466803065672,14
+Histogram Gradient Boosting,-95.46467019002664,15
+Ridge Regression,-95.46628491319643,16
+Gaussian Process Regression,-95.75642167995623,17
+Extreme Gradient Boosting,-171.527130228281,18
+Stochastic Gradient Regression,-6799.847657415106,19
+Linear Regression,,20
+Polynomial Regression Degree 2,,21
+Polynomial Regression Degree 3,,22

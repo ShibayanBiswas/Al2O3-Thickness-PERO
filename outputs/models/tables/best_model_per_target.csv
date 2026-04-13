@@ -1,5 +1,5 @@
 target,best_model_by_rmse,RMSE,R2
-Rct_initial_ohm,Decision Tree,117.90478920480369,0.24296881457168462
-ICE_percent,Gaussian Process Regression,12.617473273515825,0.31799435914838015
-Initial Reversible Capacity_mAh_g at 0.1C,Decision Tree,81.96072216747183,0.3041163615888186
-Highest Capacity Retention_percent,Decision Tree,13.37156447030198,0.3809523796846417
+Rct_initial_ohm,Adaptive Boosting,12.545979757707569,0.9261236904318099
+ICE_percent,Gaussian Process Regression,2.231636211036968,0.9407888002999073
+Initial Reversible Capacity_mAh_g at 0.1C,Gaussian Process Regression,6.846584112358198,0.9544680577851876
+Highest Capacity Retention_percent,Gaussian Process Regression,4.389801766206672,0.9624430495297631

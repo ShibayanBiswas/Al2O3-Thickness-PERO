@@ -31,7 +31,7 @@ Everything here is produced by ``py run_all.py`` (or refreshed in part by ``py p
 ## Suggested reading order (for learning the results)
 
 1. **``eda/tables/README.md``** plus **``eda/plots/README.md``** -- understand the *empirical* thickness--response structure (counts, correlations, cohort summaries, and graphics).  
-2. **``models/tables/README.md``** -- scalar fit quality **on the training set**, plus cross-validation summaries.  
+2. **``models/tables/README.md``** -- scalar fit quality **on the training set**, plus tuning summaries (``tuning_best_params.csv``).  
 3. **``models/diagnostics_plots/README.md``** -- *shape* of errors (parity, residuals vs thickness, QQ).  
 4. **``explainability/``** -- how the **chosen** best-overall model maps thickness to predictions (PDP/ICE, sensitivity, optional SHAP, permutation table).  
 5. **``reports/summary_report.md``** -- compact narrative with the same tables embedded.
@@ -509,7 +509,7 @@ With one discrete $x$ axis, flexible models can **interpolate cohorts**. High $R
         paths.models_tables / "README.md",
         r"""# Modeling Tables Index
 
-Machine-readable **training-set** scores for every fitted estimator, plus cross-validation summaries. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
+Machine-readable **training-set** scores for every fitted estimator, plus hyperparameter tuning summaries. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
 
 ---
 
@@ -519,7 +519,6 @@ Machine-readable **training-set** scores for every fitted estimator, plus cross-
 | --- | --- |
 | ``metrics__<ModelSafe>.csv`` | One row per target plus a synthetic row ``target == OVERALL_MEAN`` (mean of per-target metrics). ``<ModelSafe>`` matches ``safe_filename(model.name)``. |
 | ``model_comparison_overall.csv`` | One row per successfully fit model; sorted by overall RMSE. |
-| ``cv_r2_summary.csv`` | Cross-validation $R^2$ summary for each model under multiple CV schemes (KFold, repeated KFold, ShuffleSplit). |
 | ``tuning_best_params.csv`` | Best hyperparameters found by randomized tuning (one row per model; columns are parameter keys). Includes the primary CV mean $R^2$ used by the tuner. |
 | ``model_comparison_cv_r2.csv`` | A compact leaderboard sorted by tuned primary-CV mean $R^2$ (descending). |
 | ``best_model_per_target.csv`` | Argmin of RMSE over models, separately for each target column. |

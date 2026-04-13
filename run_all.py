@@ -14,7 +14,7 @@ from src.io_data import prepare_data
 from src.model_eval import compute_metrics_per_target, rank_models, summarize_overall
 from src.models import build_model_suite, fit_predict
 from src.report import ReportInputs, write_summary_report_md
-from src.tuning import build_cv_strategies, cv_r2_table, tune_estimator
+from src.tuning import build_cv_strategies, tune_estimator
 from src.utils import ensure_dir, safe_filename, set_global_plot_style, write_tables_excel
 from src.logging_config import configure_matplotlib_backends, setup_pipeline_logging
 from src.viz_style import apply_pero_theme
@@ -73,8 +73,8 @@ def main() -> int:
     log.info("Data loaded and validated: shape=%s x_col=%s targets=%s", df.shape, bundle.x_col, len(bundle.y_cols))
 
     # Train-only policy (per requirement): all plots and model selection use training data only.
-    # With very small n, we treat the full dataset as "training" and rely on cross-validation
-    # tables for out-of-fold estimates.
+    # With very small n, we treat the full dataset as "training"; hyperparameter search still
+    # uses cross-validation inside ``tune_estimator`` (primary CV split).
     df_train, df_test = df, df.iloc[0:0].copy()
 
     # Data audit
@@ -113,7 +113,6 @@ def main() -> int:
     all_metric_tables = []
     model_names = []
     per_model_metrics_paths = []
-    per_model_cv_tables: list[pd.DataFrame] = []
     per_model_params: list[dict] = []
     tuned_by_name: dict[str, object] = {}
 
@@ -240,19 +239,6 @@ def main() -> int:
             log.warning("Model skipped after fit failure: %s", ms.name, exc_info=True)
             continue
 
-        # CV summary (multiple CV techniques, R2 only)
-        try:
-            cv_tbl = cv_r2_table(tuned_est, X, Y, strategies=cv_strats)
-        except Exception:
-            cv_tbl = pd.DataFrame([{"cv_scheme": "CV_FAILED", "R2_mean": float("nan"), "R2_std": float("nan"), "folds": 0}])
-        cv_tbl.insert(0, "model", ms.name)
-        per_model_cv_tables.append(cv_tbl)
-        # Persist CV progress so partial runs still leave evidence.
-        try:
-            pd.concat(per_model_cv_tables, ignore_index=True).to_csv(paths.models_tables / "cv_r2_summary.csv", index=False)
-        except Exception:
-            pass
-
         per_target, metrics_tbl = compute_metrics_per_target(
             y_true=Y.to_numpy(dtype=float),
             y_pred=pred,
@@ -292,10 +278,6 @@ def main() -> int:
     comp.to_csv(paths.models_tables / "model_comparison_overall.csv", index=False)
     consolidated_model_comparison_plot(comp, out_dir=paths.models_diagnostics_plots, cfg=cfg)
 
-    # CV summary table (all models)
-    if per_model_cv_tables:
-        cv_all = pd.concat(per_model_cv_tables, ignore_index=True)
-        cv_all.to_csv(paths.models_tables / "cv_r2_summary.csv", index=False)
     if per_model_params:
         tuning_tbl = pd.DataFrame(per_model_params)
         tuning_tbl.to_csv(paths.models_tables / "tuning_best_params.csv", index=False)

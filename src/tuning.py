@@ -42,47 +42,6 @@ def build_cv_strategies(n: int, random_seed: int) -> dict[str, Any]:
     }
 
 
-def cv_r2_table(estimator: Any, X, Y, *, strategies: dict[str, Any]) -> pd.DataFrame:
-    """
-    Return a compact table of R2 across multiple CV strategies.
-    Uses fold-level per-target R2 (then averages across targets), skipping folds with <2 test samples.
-    """
-    from sklearn.base import clone
-    from sklearn.metrics import r2_score
-
-    rows: list[dict[str, Any]] = []
-    for name, cv in strategies.items():
-        fold_scores: list[float] = []
-        for tr_idx, te_idx in cv.split(X, Y):
-            te_idx = np.asarray(te_idx)
-            if te_idx.size < 2:
-                continue
-            est = clone(estimator)
-            est.fit(X.iloc[tr_idx], Y.iloc[tr_idx])
-            pred = np.asarray(est.predict(X.iloc[te_idx]), dtype=float)
-            yt = np.asarray(Y.iloc[te_idx].to_numpy(dtype=float), dtype=float)
-            # Per-target R2; average across targets.
-            per_t = []
-            for j in range(yt.shape[1]):
-                try:
-                    per_t.append(float(r2_score(yt[:, j], pred[:, j])))
-                except Exception:
-                    continue
-            if per_t:
-                fold_scores.append(float(np.mean(per_t)))
-
-        scores = np.asarray(fold_scores, dtype=float)
-        rows.append(
-            {
-                "cv_scheme": name,
-                "R2_mean": float(np.nanmean(scores)) if scores.size else float("nan"),
-                "R2_std": float(np.nanstd(scores, ddof=1)) if scores.size >= 2 else 0.0,
-                "folds": int(scores.size),
-            }
-        )
-    return pd.DataFrame(rows)
-
-
 def tune_estimator(
     name: str,
     estimator: Any,
