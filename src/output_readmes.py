@@ -190,6 +190,8 @@ Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in th
 
 High-resolution figures for a **1D input** $\rightarrow$ **4D output** study. Thickness $x$ is ``Al2O3 Thickness_nm``. **Format:** ``.png`` by default (``RunConfig.figure_format``). Folder names come from ``safe_filename(to_title_case(...))``.
 
+Each figure also has a **companion ``*.csv``** with the same stem (where ``save_plot_csv`` is wired in ``src/eda.py``): univariate panels, bivariate/grouped plots, correlation heatmaps, pair-plot data, etc.
+
 Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_style.py``: primary traces in **sky** blue, secondary overlays (KDE, trends) often in **orange**, cohort summaries in **green**, reference lines in **text** (light), dark navy **background** for print-ready contrast.
 
 ---
@@ -634,13 +636,15 @@ The **``OVERALL_MEAN``** row inside each ``metrics__*.csv`` averages these quant
 
 Naming: each figure stem is passed through ``safe_filename()`` in ``savefig()`` (``src/plots.py``). Below, ``__<base>`` means ``__`` concatenated with ``<ModelSafe>__<TargetSafe>`` as built in ``diagnostic_plots_per_target()`` (``src/diagnostics.py``).
 
+For every exported ``*.png`` in this tree, the pipeline also writes a **matching ``*.csv``** (same stem, tidy long rows) next to the figure via ``save_plot_csv()`` --- use it to rebuild tables or overlay data in another tool.
+
 ---
 
 ## Root of ``diagnostics_plots/`` (flat)
 
-| File stem (``*.png``) | Content |
+| File stem (``*.png`` / ``*.csv``) | Content |
 | --- | --- |
-| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``) |
+| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``); CSV lists the same bar series. |
 
 ---
 
@@ -785,6 +789,8 @@ Explainability is run for the **best overall** model (lowest mean RMSE across ta
         r"""# Explainability Plots Index
 
 Each graphic studies $\hat{y}:\mathbb{R}_{\ge0}\to\mathbb{R}$ **per target** for the champion model. Stems are built in ``src/explainability.py`` and saved with ``savefig()``, so the **full stem** (including the target suffix) is normalized by ``safe_filename()``.
+
+PDP/ICE and sensitivity figures already ship **``*.csv``** next to the ``*.png``; SHAP stems (``shap_*``) also have matching CSVs when SHAP runs successfully.
 
 Convention below: ``<TargetRaw>`` is the **exact** target column string from the dataset; on disk it appears as ``safe_filename("...__" + <TargetRaw>)`` merged into one stem.
 

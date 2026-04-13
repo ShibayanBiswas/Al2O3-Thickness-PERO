@@ -2,6 +2,8 @@
 
 Each graphic studies $\hat{y}:\mathbb{R}_{\ge0}\to\mathbb{R}$ **per target** for the champion model. Stems are built in ``src/explainability.py`` and saved with ``savefig()``, so the **full stem** (including the target suffix) is normalized by ``safe_filename()``.
 
+PDP/ICE and sensitivity figures already ship **``*.csv``** next to the ``*.png``; SHAP stems (``shap_*``) also have matching CSVs when SHAP runs successfully.
+
 Convention below: ``<TargetRaw>`` is the **exact** target column string from the dataset; on disk it appears as ``safe_filename("...__" + <TargetRaw>)`` merged into one stem.
 
 ---

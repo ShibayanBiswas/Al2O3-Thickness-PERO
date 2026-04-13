@@ -171,6 +171,21 @@ def shap_explain_1d_single_output(
         legend_outside_top_right(ax, ncol=1, title="Attribution")
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_beeswarm__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+        _bees_rows: list[dict] = [
+            {"series": "point", "thickness_nm": float(xv), "x_jittered": float(xj), "shap_value": float(sv)}
+            for xv, xj, sv in zip(xvals, xj, svals, strict=False)
+        ]
+        if qb is not None:
+            gx, ql, qh = qb
+            for a, b, c in zip(gx, ql, qh, strict=False):
+                _bees_rows.append(
+                    {"series": "quantile_band_10_90", "grid_x": float(a), "q_lo": float(b), "q_hi": float(c)}
+                )
+        if lt is not None:
+            gx2, gp = lt
+            for a, b in zip(gx2, gp, strict=False):
+                _bees_rows.append({"series": "linear_trend", "grid_x": float(a), "y": float(b)})
+        save_plot_csv(out_plots, f"shap_beeswarm__{target}", _bees_rows)
     except Exception:
         pass
 
@@ -198,6 +213,17 @@ def shap_explain_1d_single_output(
         )
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_bar__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+        save_plot_csv(
+            out_plots,
+            f"shap_bar__{target}",
+            [
+                {
+                    "series": "mean_abs_shap",
+                    "feature": str(X.columns[0]),
+                    "mean_abs_shap": mean_abs,
+                }
+            ],
+        )
     except Exception:
         pass
 
@@ -233,6 +259,21 @@ def shap_explain_1d_single_output(
         legend_outside_top_right(ax, ncol=1, title="Attribution")
         polish_axes(ax)
         saved.append(savefig(fig, out_plots, f"shap_dependence__{target}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+        _dep_rows: list[dict] = [
+            {"series": "point", "thickness_nm": float(xv), "x_jittered": float(xj), "shap_value": float(sv)}
+            for xv, xj, sv in zip(xvals, xj, svals, strict=False)
+        ]
+        if qb is not None:
+            gxq, ql, qh = qb
+            for a, b, c in zip(gxq, ql, qh, strict=False):
+                _dep_rows.append(
+                    {"series": "quantile_band_10_90", "grid_x": float(a), "q_lo": float(b), "q_hi": float(c)}
+                )
+        if lt is not None:
+            gx3, gp3 = lt
+            for a, b in zip(gx3, gp3, strict=False):
+                _dep_rows.append({"series": "linear_trend", "grid_x": float(a), "y": float(b)})
+        save_plot_csv(out_plots, f"shap_dependence__{target}", _dep_rows)
     except Exception:
         pass
 

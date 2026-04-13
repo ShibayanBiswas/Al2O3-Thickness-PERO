@@ -2,6 +2,8 @@
 
 High-resolution figures for a **1D input** $\rightarrow$ **4D output** study. Thickness $x$ is ``Al2O3 Thickness_nm``. **Format:** ``.png`` by default (``RunConfig.figure_format``). Folder names come from ``safe_filename(to_title_case(...))``.
 
+Each figure also has a **companion ``*.csv``** with the same stem (where ``save_plot_csv`` is wired in ``src/eda.py``): univariate panels, bivariate/grouped plots, correlation heatmaps, pair-plot data, etc.
+
 Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_style.py``: primary traces in **sky** blue, secondary overlays (KDE, trends) often in **orange**, cohort summaries in **green**, reference lines in **text** (light), dark navy **background** for print-ready contrast.
 
 ---

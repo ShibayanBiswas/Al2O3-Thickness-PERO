@@ -1,5 +1,5 @@
 target,feature,r2_drop_mean,r2_drop_std,n_repeats
-Rct_initial_ohm,Al2O3 Thickness_nm,1.7658806485650658,0.6078373797389747,120
-ICE_percent,Al2O3 Thickness_nm,0.9253372243839167,0.47047972823735495,120
-Initial Reversible Capacity_mAh_g at 0.1C,Al2O3 Thickness_nm,0.6522711641753433,0.38315024485438387,120
-Highest Capacity Retention_percent,Al2O3 Thickness_nm,1.8005466345943735,0.6208585375504155,120
+Rct_initial_ohm,Al2O3 Thickness_nm,0.27602670127801654,0.0856793521054119,120
+ICE_percent,Al2O3 Thickness_nm,0.040520420190786895,0.03794523037188439,120
+Initial Reversible Capacity_mAh_g at 0.1C,Al2O3 Thickness_nm,0.03612389292833084,0.04810844047594205,120
+Highest Capacity Retention_percent,Al2O3 Thickness_nm,0.2565854782575513,0.08885870738754587,120

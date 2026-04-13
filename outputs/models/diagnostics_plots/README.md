@@ -4,13 +4,15 @@
 
 Naming: each figure stem is passed through ``safe_filename()`` in ``savefig()`` (``src/plots.py``). Below, ``__<base>`` means ``__`` concatenated with ``<ModelSafe>__<TargetSafe>`` as built in ``diagnostic_plots_per_target()`` (``src/diagnostics.py``).
 
+For every exported ``*.png`` in this tree, the pipeline also writes a **matching ``*.csv``** (same stem, tidy long rows) next to the figure via ``save_plot_csv()`` --- use it to rebuild tables or overlay data in another tool.
+
 ---
 
 ## Root of ``diagnostics_plots/`` (flat)
 
-| File stem (``*.png``) | Content |
+| File stem (``*.png`` / ``*.csv``) | Content |
 | --- | --- |
-| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``) |
+| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``); CSV lists the same bar series. |
 
 ---
 
