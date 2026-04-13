@@ -1,0 +1,15 @@
+model,best_cv_r2_primary,model__alpha,model__l1_ratio,ridge__alpha,estimator__sgd__epsilon,estimator__sgd__alpha,min_samples_split,min_samples_leaf,max_depth,n_estimators,max_features,estimator__subsample,estimator__n_estimators,estimator__max_depth,estimator__learning_rate
+Linear Regression,,,,,,,,,,,,,,,
+Ridge Regression,-95.46687686708344,5355.666917706896,,,,,,,,,,,,,
+Lasso Regression,-93.55889256964585,2.0723146452190293,,,,,,,,,,,,,
+Elastic Net Regression,-94.94243695250961,8.39557861999512,0.47631578947368414,,,,,,,,,,,,
+Polynomial Regression Degree 2,,,,,,,,,,,,,,,
+Polynomial Ridge Degree 2,-82.79279382588399,,,1.5973122800602557,,,,,,,,,,,
+Polynomial Regression Degree 3,,,,,,,,,,,,,,,
+Polynomial Ridge Degree 3,-77.26504251051715,,,0.02018760254679039,,,,,,,,,,,
+Stochastic Gradient Regression,-6799.847657415106,,,,0.25,6.020894493336126e-05,,,,,,,,,
+Decision Tree,-6.203192601941192,,,,,,4.0,1.0,2.0,,,,,,
+Random Forest,-78.72388439165822,,,,,,6.0,1.0,6.0,700.0,sqrt,,,,
+Extra Trees,-66.49710527950741,,,,,,4.0,1.0,5.0,450.0,sqrt,,,,
+Gradient Boosting,-10.182525892775121,,,,,,,,,,,0.85,350.0,3.0,0.4379044014143724
+Adaptive Boosting,-16.18416112191419,,,,,,,,,,,,400.0,,0.36481187407665144

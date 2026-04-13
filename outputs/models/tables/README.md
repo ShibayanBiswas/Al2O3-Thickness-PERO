@@ -1,6 +1,6 @@
 # Modeling Tables Index
 
-Machine-readable **in-sample** scores for every fitted estimator. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
+Machine-readable **training-set** scores for every fitted estimator, plus cross-validation summaries. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
 
 ---
 
@@ -10,6 +10,9 @@ Machine-readable **in-sample** scores for every fitted estimator. Produced in ``
 | --- | --- |
 | ``metrics__<ModelSafe>.csv`` | One row per target plus a synthetic row ``target == OVERALL_MEAN`` (mean of per-target metrics). ``<ModelSafe>`` matches ``safe_filename(model.name)``. |
 | ``model_comparison_overall.csv`` | One row per successfully fit model; sorted by overall RMSE. |
+| ``cv_r2_summary.csv`` | Cross-validation $R^2$ summary for each model under multiple CV schemes (KFold, repeated KFold, ShuffleSplit). |
+| ``tuning_best_params.csv`` | Best hyperparameters found by randomized tuning (one row per model; columns are parameter keys). Includes the primary CV mean $R^2$ used by the tuner. |
+| ``model_comparison_cv_r2.csv`` | A compact leaderboard sorted by tuned primary-CV mean $R^2$ (descending). |
 | ``best_model_per_target.csv`` | Argmin of RMSE over models, separately for each target column. |
 | ``all_model_metrics.xlsx`` | Workbook: sheets ``model_comparison_overall``, ``best_model_per_target``, and ``metrics__<ModelName>`` per model. Sheet names pass through ``safe_sheet_name()`` in ``src/utils.py`` (Excel max 31 characters; ``: \\ / ? * [ ]`` removed). |
 
@@ -44,7 +47,7 @@ $$
 \mathrm{RMSE}_j = \sqrt{\mathrm{MSE}_j}.
 $$
 
-Coefficient of determination (in-sample):
+Coefficient of determination (training):
 
 $$
 R^2_j = 1 - \frac{\sum_i \hat\varepsilon_{ij}^2}{\sum_i (y_{ij}-\bar y_j)^2}.

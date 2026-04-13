@@ -31,7 +31,7 @@ Everything here is produced by ``py run_all.py`` (or refreshed in part by ``py p
 ## Suggested reading order (for learning the results)
 
 1. **``eda/tables/README.md``** plus **``eda/plots/README.md``** -- understand the *empirical* thickness--response structure (counts, correlations, cohort summaries, and graphics).  
-2. **``models/tables/README.md``** -- scalar fit quality (in-sample) for every candidate model.  
+2. **``models/tables/README.md``** -- scalar fit quality **on the training set**, plus cross-validation summaries.  
 3. **``models/diagnostics_plots/README.md``** -- *shape* of errors (parity, residuals vs thickness, QQ).  
 4. **``explainability/``** -- how the **chosen** best-overall model maps thickness to predictions (PDP/ICE, sensitivity, optional SHAP, permutation table).  
 5. **``reports/summary_report.md``** -- compact narrative with the same tables embedded.
@@ -481,9 +481,10 @@ These quantify **fit to the tabulated rows**, not guaranteed out-of-sample gener
 
 ## Supervised learning in this project (tutorial)
 
-Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. Training uses **every row** in the table (no default train/test split), so:
+Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. The pipeline now uses a **train split**, and all plots are computed from **training data only**, so:
 
-- **Metrics** (MAE, RMSE, $R^2$) are **in-sample**: they measure how well $\hat{\mathbf{f}}$ reproduces the observed $(x, \mathbf{y})$ pairs you already fed in.  
+- **Training metrics** (MAE, RMSE, $R^2$) measure how well $\hat{\mathbf{f}}$ reproduces the observed training pairs $(x, \mathbf{y})$.
+- **Cross-validation** tables add an out-of-fold estimate of generalization (within the limits of small $n$).
 - They are **not** automatic certificates of future generalization to new cells or synthesis batches.
 
 **Adjusted $R^2$** penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
@@ -508,7 +509,7 @@ With one discrete $x$ axis, flexible models can **interpolate cohorts**. High $R
         paths.models_tables / "README.md",
         r"""# Modeling Tables Index
 
-Machine-readable **in-sample** scores for every fitted estimator. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
+Machine-readable **training-set** scores for every fitted estimator, plus cross-validation summaries. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
 
 ---
 
@@ -518,6 +519,9 @@ Machine-readable **in-sample** scores for every fitted estimator. Produced in ``
 | --- | --- |
 | ``metrics__<ModelSafe>.csv`` | One row per target plus a synthetic row ``target == OVERALL_MEAN`` (mean of per-target metrics). ``<ModelSafe>`` matches ``safe_filename(model.name)``. |
 | ``model_comparison_overall.csv`` | One row per successfully fit model; sorted by overall RMSE. |
+| ``cv_r2_summary.csv`` | Cross-validation $R^2$ summary for each model under multiple CV schemes (KFold, repeated KFold, ShuffleSplit). |
+| ``tuning_best_params.csv`` | Best hyperparameters found by randomized tuning (one row per model; columns are parameter keys). Includes the primary CV mean $R^2$ used by the tuner. |
+| ``model_comparison_cv_r2.csv`` | A compact leaderboard sorted by tuned primary-CV mean $R^2$ (descending). |
 | ``best_model_per_target.csv`` | Argmin of RMSE over models, separately for each target column. |
 | ``all_model_metrics.xlsx`` | Workbook: sheets ``model_comparison_overall``, ``best_model_per_target``, and ``metrics__<ModelName>`` per model. Sheet names pass through ``safe_sheet_name()`` in ``src/utils.py`` (Excel max 31 characters; ``: \\ / ? * [ ]`` removed). |
 
@@ -552,7 +556,7 @@ $$
 \mathrm{RMSE}_j = \sqrt{\mathrm{MSE}_j}.
 $$
 
-Coefficient of determination (in-sample):
+Coefficient of determination (training):
 
 $$
 R^2_j = 1 - \frac{\sum_i \hat\varepsilon_{ij}^2}{\sum_i (y_{ij}-\bar y_j)^2}.
@@ -879,7 +883,7 @@ with $\pi$ a random permutation of the thickness column.
 | $\Delta R^2_j$ | Reading |
 | --- | --- |
 | Large | Fit leans on authentic ordering of $x$ |
-| Tiny | Thickness weak in-sample or noise-dominated |
+| Tiny | Thickness weak on the training sample or noise-dominated |
 
 Pair with PDP/ICE and (if present) SHAP $|\phi|$ --- tables encode **stability**, curves encode **shape**.
 

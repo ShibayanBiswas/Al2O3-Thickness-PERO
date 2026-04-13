@@ -176,72 +176,78 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
     except Exception:
         pass
 
-    # Optional: XGBoost / LightGBM / CatBoost (wrapped)
-    xgb = optional_import("xgboost")
-    if xgb is not None:
-        try:
-            suite.append(
-                ModelSpec(
-                    "Extreme Gradient Boosting",
-                    MultiOutputRegressor(
-                        xgb.XGBRegressor(
-                            n_estimators=300,
-                            learning_rate=0.06,
-                            max_depth=3,
-                            subsample=0.9,
-                            colsample_bytree=1.0,
-                            reg_lambda=1.0,
-                            random_state=random_seed,
-                            objective="reg:squarederror",
-                        )
-                    ),
-                    n_features_effective=1,
-                )
-            )
-        except Exception:
-            pass
+    # Optional external boosters (XGBoost / LightGBM / CatBoost) are disabled by default.
+    # These libraries can be fragile on some Windows setups (native deps / OpenMP), and the
+    # pipeline is intended to be reproducible without them.
+    import os
 
-    lgbm = optional_import("lightgbm")
-    if lgbm is not None:
-        try:
-            suite.append(
-                ModelSpec(
-                    "Light Gradient Boosting",
-                    MultiOutputRegressor(
-                        lgbm.LGBMRegressor(
-                            n_estimators=400,
-                            learning_rate=0.06,
-                            num_leaves=15,
-                            random_state=random_seed,
-                        )
-                    ),
-                    n_features_effective=1,
+    enable_optional = os.environ.get("PERO_ENABLE_OPTIONAL_BOOSTERS", "").strip() in {"1", "true", "True", "YES", "yes"}
+    if enable_optional:
+        xgb = optional_import("xgboost")
+        if xgb is not None:
+            try:
+                suite.append(
+                    ModelSpec(
+                        "Extreme Gradient Boosting",
+                        MultiOutputRegressor(
+                            xgb.XGBRegressor(
+                                n_estimators=300,
+                                learning_rate=0.06,
+                                max_depth=3,
+                                subsample=0.9,
+                                colsample_bytree=1.0,
+                                reg_lambda=1.0,
+                                random_state=random_seed,
+                                objective="reg:squarederror",
+                            )
+                        ),
+                        n_features_effective=1,
+                    )
                 )
-            )
-        except Exception:
-            pass
+            except Exception:
+                pass
 
-    cat = optional_import("catboost")
-    if cat is not None:
-        try:
-            suite.append(
-                ModelSpec(
-                    "Categorical Boosting",
-                    MultiOutputRegressor(
-                        cat.CatBoostRegressor(
-                            depth=4,
-                            learning_rate=0.06,
-                            iterations=450,
-                            random_seed=random_seed,
-                            verbose=False,
-                            loss_function="RMSE",
-                        )
-                    ),
-                    n_features_effective=1,
+        lgbm = optional_import("lightgbm")
+        if lgbm is not None:
+            try:
+                suite.append(
+                    ModelSpec(
+                        "Light Gradient Boosting",
+                        MultiOutputRegressor(
+                            lgbm.LGBMRegressor(
+                                n_estimators=400,
+                                learning_rate=0.06,
+                                num_leaves=15,
+                                random_state=random_seed,
+                            )
+                        ),
+                        n_features_effective=1,
+                    )
                 )
-            )
-        except Exception:
-            pass
+            except Exception:
+                pass
+
+        cat = optional_import("catboost")
+        if cat is not None:
+            try:
+                suite.append(
+                    ModelSpec(
+                        "Categorical Boosting",
+                        MultiOutputRegressor(
+                            cat.CatBoostRegressor(
+                                depth=4,
+                                learning_rate=0.06,
+                                iterations=450,
+                                random_seed=random_seed,
+                                verbose=False,
+                                loss_function="RMSE",
+                            )
+                        ),
+                        n_features_effective=1,
+                    )
+                )
+            except Exception:
+                pass
 
     return suite
 

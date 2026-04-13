@@ -19,8 +19,15 @@ class DataBundle:
 
 
 def load_dataset_excel(xlsx_path: str, colspec: ColumnSpec) -> pd.DataFrame:
-    df = pd.read_excel(xlsx_path, sheet_name=colspec.sheet_name)
-    return df
+    # Prefer the configured sheet name, but fall back gracefully if the workbook changed.
+    try:
+        return pd.read_excel(xlsx_path, sheet_name=colspec.sheet_name)
+    except ValueError:
+        # Sheet not found. Use the first sheet as a reproducible fallback.
+        xl = pd.ExcelFile(xlsx_path)
+        if not xl.sheet_names:
+            raise
+        return pd.read_excel(xlsx_path, sheet_name=xl.sheet_names[0])
 
 
 def standardize_columns(df: pd.DataFrame) -> pd.DataFrame:

@@ -20,7 +20,7 @@ The maps $f_j$ may be smooth, piecewise, or cohort-dominated; with replicated $x
 
 ## Structural facts every analyst should internalize
 
-- **Sheet rule:** only `Dataset` is ingested; other sheets are ignored by construction.
+- **Sheet rule:** the pipeline prefers `Dataset` if present; if the workbook uses a different name (e.g. `Sheet1`), it falls back to the **first** worksheet deterministically.
 - **Identifier column `Sample`:** deliberately dropped so inference cannot smuggle hidden covariates through label leakage.
 - **Discrete support:** mass concentrates at $x=0$ nm with a long tail of sparse nonzero levels—EDA therefore emphasizes grouped means, ribbons, and overlap-aware scatter rather than a single Pearson coefficient.
 
@@ -32,4 +32,4 @@ Strict numeric coercion and schema checks fail fast if headers drift. That harsh
 
 | File | Role |
 | --- | --- |
-| **`Data.xlsx`** | Canonical multi-sheet workbook; analysis consumes `Dataset` only |
+| **`Data.xlsx`** | Canonical workbook; analysis consumes the configured worksheet name (fallback: first sheet) |
