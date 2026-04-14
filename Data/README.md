@@ -6,13 +6,13 @@ Authoritative data live here so provenance never forks silently. The pipeline re
 
 ## Design & measurement model (conceptual)
 
-Rows index experimental cells. The sole **controlled** continuous coordinate is **$\mathrm{Al}_{2}\mathrm{O}_{3}$** thickness $x\ge 0$ (nanometres), paired with four electrochemical responses:
+Rows index experimental cells. The sole **controlled** continuous coordinate is **Al₂O₃ thickness** $x\ge 0$ (nanometres), paired with four electrochemical responses:
 
-$$
+```math
 y_j \;=\; f_j(x) + \varepsilon_j,
 \qquad j=1,\ldots,4,
 \qquad \mathbb{E}[\varepsilon_j \mid x]=0 \;\text{(working identity).}
-$$
+```
 
 The maps $f_j$ may be smooth, piecewise, or cohort-dominated; with replicated $x$ atoms, **within-level** and **between-level** variance must be read together—marginal correlations are not sufficient statistics.
 
@@ -20,7 +20,7 @@ The maps $f_j$ may be smooth, piecewise, or cohort-dominated; with replicated $x
 
 ## Structural facts every analyst should internalize
 
-- **Sheet rule:** only `Dataset` is ingested; other sheets are ignored by construction.
+- **Sheet rule:** the pipeline prefers `Dataset` if present; if the workbook uses a different name (e.g. `Sheet1`), it falls back to the **first** worksheet deterministically.
 - **Identifier column `Sample`:** deliberately dropped so inference cannot smuggle hidden covariates through label leakage.
 - **Discrete support:** mass concentrates at $x=0$ nm with a long tail of sparse nonzero levels—EDA therefore emphasizes grouped means, ribbons, and overlap-aware scatter rather than a single Pearson coefficient.
 
@@ -32,4 +32,4 @@ Strict numeric coercion and schema checks fail fast if headers drift. That harsh
 
 | File | Role |
 | --- | --- |
-| **`Data.xlsx`** | Canonical multi-sheet workbook; analysis consumes `Dataset` only |
+| **`Data.xlsx`** | Canonical workbook; analysis consumes the configured worksheet name (fallback: first sheet) |

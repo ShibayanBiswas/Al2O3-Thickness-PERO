@@ -26,11 +26,11 @@ models/
 
 For target $j$, with predictions $\hat{y}_{ij}$ and truths $y_{ij}$, $i=1,\ldots,n$:
 
-$$
+```math
 \mathrm{MAE}_j=\frac{1}{n}\sum_i |y_{ij}-\hat{y}_{ij}|,\quad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_i (y_{ij}-\hat{y}_{ij})^2},\quad
 R^2_j = 1 - \frac{\sum_i(y_{ij}-\hat{y}_{ij})^2}{\sum_i(y_{ij}-\bar{y}_j)^2}.
-$$
+```
 
 These quantify **fit to the tabulated rows**, not guaranteed out-of-sample generalization.
 
@@ -51,12 +51,13 @@ These quantify **fit to the tabulated rows**, not guaranteed out-of-sample gener
 
 ## Supervised learning in this project (tutorial)
 
-Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. Training uses **every row** in the table (no default train/test split), so:
+Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. The pipeline now uses a **train split**, and all plots are computed from **training data only**, so:
 
-- **Metrics** (MAE, RMSE, $R^2$) are **in-sample**: they measure how well $\hat{\mathbf{f}}$ reproduces the observed $(x, \mathbf{y})$ pairs you already fed in.  
+- **Training metrics** (MAE, RMSE, $R^2$) measure how well $\hat{\mathbf{f}}$ reproduces the observed training pairs $(x, \mathbf{y})$.
+- **Cross-validation** tables add an out-of-fold estimate of generalization (within the limits of small $n$).
 - They are **not** automatic certificates of future generalization to new cells or synthesis batches.
 
-**Adjusted $R^2$** penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
+**Adjusted** $R^2$ penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
 
 ---
 

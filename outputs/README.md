@@ -7,7 +7,7 @@ Everything here is produced by ``py run_all.py`` (or refreshed in part by ``py p
 ## Suggested reading order (for learning the results)
 
 1. **``eda/tables/README.md``** plus **``eda/plots/README.md``** -- understand the *empirical* thickness--response structure (counts, correlations, cohort summaries, and graphics).  
-2. **``models/tables/README.md``** -- scalar fit quality (in-sample) for every candidate model.  
+2. **``models/tables/README.md``** -- scalar fit quality **on the training set**, plus tuning summaries (``tuning_best_params.csv``).  
 3. **``models/diagnostics_plots/README.md``** -- *shape* of errors (parity, residuals vs thickness, QQ).  
 4. **``explainability/``** -- how the **chosen** best-overall model maps thickness to predictions (PDP/ICE, sensitivity, optional SHAP, permutation table).  
 5. **``reports/summary_report.md``** -- compact narrative with the same tables embedded.

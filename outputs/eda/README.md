@@ -1,6 +1,6 @@
 # Exploratory Data Analysis Outputs
 
-Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
+Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**Al₂O₃ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
 
 ---
 
@@ -21,9 +21,9 @@ eda/
 
 ## Working model (descriptive only)
 
-$$
+```math
 Y_j = g_j(x) + \eta_j,\qquad j=1,\ldots,4,
-$$
+```
 
 $g_j$ might be smooth, piecewise, or **cohort-dominated** (almost constant within each discrete $x_k$). $\eta_j$ is everything else (measurement noise, batch effects, unmodeled factors). **EDA does not assume** $\mathbb{E}[\eta_j\mid x]=0$; that is a **modeling** assumption diagnosed later under ``outputs/models/diagnostics_plots/``.
 
@@ -57,4 +57,4 @@ When many cells share the same thickness, scatter plots **stack vertically**. Th
 
 ## Electrochemical shorthand
 
-Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` / ``$$...$$``.
+Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` for inline math and fenced math blocks (three backticks + ``math``) for display.

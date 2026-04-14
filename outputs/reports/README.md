@@ -37,11 +37,11 @@ When writing prose, reference **specific** PNGs by path (e.g. ``outputs/models/d
 
 ## Notation (GitHub)
 
-Use ``$...$`` inline and ``$$...$$`` display. Example:
+Use ``$...$`` for inline math and a fenced math block (three backticks + ``math``) for display. Example:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij} - \hat{y}_{ij}.
-$$
+```
 
 Exported figures use Matplotlib mathtext ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_{2}\mathrm{O}_{3}$).
 

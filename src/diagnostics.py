@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-from .plots import savefig, scatter_with_marginals, with_axes
+from .plots import save_plot_csv, savefig, with_axes
 from .utils import ensure_dir, safe_filename, smooth_curve_1d, strip_parentheses_text, to_title_case
 from .viz_style import PERO, get_display_labels, legend_outside_top_right, polish_axes, set_dark_background
 
@@ -54,6 +54,48 @@ def qqplot_residuals(ax, residuals: np.ndarray, title: str) -> None:
     ax.set_xlabel("Theoretical quantiles")
     ax.set_ylabel("Ordered residuals")
     legend_outside_top_right(ax, title="QQ diagnostic")
+
+
+def _qq_plot_csv_rows(residuals: np.ndarray) -> list[dict]:
+    """Same geometry as ``qqplot_residuals`` for tidy CSV export."""
+    try:
+        from scipy import stats
+    except Exception:
+        return []
+    r = residuals[np.isfinite(residuals)]
+    if r.size < 3:
+        return []
+    r = np.sort(np.asarray(r, dtype=float))
+    n = int(r.size)
+    i = np.arange(1, n + 1, dtype=float)
+    p = (i - 0.5) / n
+    osm = stats.norm.ppf(p)
+    osr = r
+    slope, intercept = np.polyfit(osm, osr, deg=1)
+    yref = slope * osm + intercept
+    alpha = 0.10
+    p_lo = stats.beta.ppf(alpha / 2, i, n + 1 - i)
+    p_hi = stats.beta.ppf(1 - alpha / 2, i, n + 1 - i)
+    x_lo = stats.norm.ppf(p_lo)
+    x_hi = stats.norm.ppf(p_hi)
+    y_lo = slope * x_lo + intercept
+    y_hi = slope * x_hi + intercept
+    rows: list[dict] = []
+    for k in range(n):
+        rows.append(
+            {
+                "series": "empirical_quantile",
+                "rank": k + 1,
+                "theoretical_quantile": float(osm[k]),
+                "ordered_residual": float(osr[k]),
+            }
+        )
+    for k in range(n):
+        rows.append({"series": "normal_reference", "rank": k + 1, "x": float(osm[k]), "y": float(yref[k])})
+    for k in range(n):
+        rows.append({"series": "quantile_band_lower", "rank": k + 1, "x": float(osm[k]), "y": float(y_lo[k])})
+        rows.append({"series": "quantile_band_upper", "rank": k + 1, "x": float(osm[k]), "y": float(y_hi[k])})
+    return rows
 
 
 def diagnostic_plots_per_target(
@@ -105,6 +147,16 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, calib_dir, f"Parity Plot__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    _parity_rows: list[dict] = [
+        {"series": "point", "actual": float(a), "predicted": float(p)} for a, p in zip(y_true, y_pred, strict=False)
+    ]
+    for xp in xs_p:
+        _parity_rows.append({"series": "parity_reference", "actual": float(xp), "predicted": float(xp)})
+    if band > 0:
+        for xp in xs_p:
+            _parity_rows.append({"series": "parity_band_upper", "actual": float(xp), "predicted": float(xp + band)})
+            _parity_rows.append({"series": "parity_band_lower", "actual": float(xp), "predicted": float(xp - band)})
+    save_plot_csv(calib_dir, f"Parity Plot__{base}", _parity_rows)
 
     # Residuals vs predicted
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -117,6 +169,11 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, title="Diagnostics")
     polish_axes(ax)
     saved.append(savefig(fig, resid_dir, f"Residuals Versus Predicted__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(
+        resid_dir,
+        f"Residuals Versus Predicted__{base}",
+        [{"series": "point", "predicted": float(p), "residual": float(r)} for p, r in zip(y_pred, resid, strict=False)],
+    )
 
     # Residuals vs actual
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -129,6 +186,11 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, title="Diagnostics")
     polish_axes(ax)
     saved.append(savefig(fig, resid_dir, f"Residuals Versus Actual__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(
+        resid_dir,
+        f"Residuals Versus Actual__{base}",
+        [{"series": "point", "actual": float(a), "residual": float(r)} for a, r in zip(y_true, resid, strict=False)],
+    )
 
     # Residuals vs thickness (detect structure)
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -141,6 +203,11 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, title="Diagnostics")
     polish_axes(ax)
     saved.append(savefig(fig, resid_dir, f"Residuals Versus Thickness__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(
+        resid_dir,
+        f"Residuals Versus Thickness__{base}",
+        [{"series": "point", "thickness_nm": float(xi), "residual": float(r)} for xi, r in zip(x, resid, strict=False)],
+    )
 
     # Residual distribution hist + KDE
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -153,6 +220,19 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, title="Density")
     polish_axes(ax)
     saved.append(savefig(fig, dist_dir, f"Residual Distribution__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    _rd_rows = [{"series": "residual_sample", "residual": float(r)} for r in resid if np.isfinite(r)]
+    try:
+        from scipy.stats import gaussian_kde
+
+        rr = resid[np.isfinite(resid)]
+        if rr.size >= 2 and np.nanstd(rr, ddof=1) > 0:
+            kde = gaussian_kde(rr)
+            g = np.linspace(float(np.min(rr)), float(np.max(rr)), 200)
+            for xi, di in zip(g, kde(g), strict=False):
+                _rd_rows.append({"series": "kde", "kde_x": float(xi), "kde_density": float(di)})
+    except Exception:
+        pass
+    save_plot_csv(dist_dir, f"Residual Distribution__{base}", _rd_rows)
 
     # Residual box
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -167,6 +247,11 @@ def diagnostic_plots_per_target(
     )
     polish_axes(ax)
     saved.append(savefig(fig, dist_dir, f"Residual Box Plot__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(
+        dist_dir,
+        f"Residual Box Plot__{base}",
+        [{"series": "residual_sample", "residual": float(r)} for r in resid if np.isfinite(r)],
+    )
 
     # QQ plot
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -174,6 +259,7 @@ def diagnostic_plots_per_target(
     qqplot_residuals(ax, resid, title=f"{target_title} QQ Plot")
     polish_axes(ax)
     saved.append(savefig(fig, dist_dir, f"QQ Plot__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(dist_dir, f"QQ Plot__{base}", _qq_plot_csv_rows(resid))
 
     # Error magnitude vs thickness
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -185,6 +271,11 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, title="Magnitude")
     polish_axes(ax)
     saved.append(savefig(fig, resid_dir, f"Absolute Error Versus Thickness__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    save_plot_csv(
+        resid_dir,
+        f"Absolute Error Versus Thickness__{base}",
+        [{"series": "point", "thickness_nm": float(xi), "absolute_error": float(e)} for xi, e in zip(x, abs_err, strict=False)],
+    )
 
     # Sorted actual vs sorted predicted (distributional calibration)
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -206,6 +297,21 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, calib_dir, f"Sorted Actual And Predicted__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    _sap_rows: list[dict] = []
+    for k in range(n_s):
+        _sap_rows.append(
+            {
+                "series": "sorted_curves",
+                "sorted_index": float(idx[k]),
+                "sorted_actual": float(ya[k]),
+                "sorted_predicted": float(yp[k]),
+                "smoothed_actual": float(ya_s[k]),
+                "smoothed_predicted": float(yp_s[k]),
+                "between_curves_lo": float(lo[k]),
+                "between_curves_hi": float(hi[k]),
+            }
+        )
+    save_plot_csv(calib_dir, f"Sorted Actual And Predicted__{base}", _sap_rows)
 
     # Predicted distribution vs actual distribution
     fig, ax = with_axes(figsize=(7.5, 7.5))
@@ -221,6 +327,30 @@ def diagnostic_plots_per_target(
     legend_outside_top_right(ax, ncol=1)
     polish_axes(ax)
     saved.append(savefig(fig, dist_dir, f"Predicted And Actual Density__{base}", dpi=cfg.figure_dpi, fmt=cfg.figure_format))
+    _pad_rows: list[dict] = []
+    try:
+        from scipy.stats import gaussian_kde
+
+        lo_b = float(min(y_true.min(), y_pred.min()))
+        hi_b = float(max(y_true.max(), y_pred.max()))
+        if hi_b > lo_b:
+            grid_d = np.linspace(lo_b, hi_b, 200)
+            for lab, arr in (("actual", y_true), ("predicted", y_pred)):
+                a = np.asarray(arr, dtype=float)
+                a = a[np.isfinite(a)]
+                if a.size >= 2 and np.nanstd(a, ddof=1) > 0:
+                    kde = gaussian_kde(a)
+                    for xi, di in zip(grid_d, kde(grid_d), strict=False):
+                        _pad_rows.append({"series": f"{lab}_kde", "value": float(xi), "density": float(di)})
+    except Exception:
+        pass
+    for v in y_true:
+        if np.isfinite(v):
+            _pad_rows.append({"series": "actual_sample", "value": float(v)})
+    for v in y_pred:
+        if np.isfinite(v):
+            _pad_rows.append({"series": "predicted_sample", "value": float(v)})
+    save_plot_csv(dist_dir, f"Predicted And Actual Density__{base}", _pad_rows)
 
     return saved
 
@@ -246,5 +376,16 @@ def consolidated_model_comparison_plot(
     )
     polish_axes(ax)
     out = savefig(fig, out_dir, "Model Comparison Overall Error", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+    mc_rows = [
+        {
+            "series": "bar",
+            "model": str(r["model"]),
+            "overall_rmse": float(r["OVERALL_RMSE"]),
+            "overall_mae": float(r["OVERALL_MAE"]),
+            "overall_r2": float(r["OVERALL_R2"]),
+        }
+        for _, r in top.iterrows()
+    ]
+    save_plot_csv(out_dir, "Model Comparison Overall Error", mc_rows)
     return out
 

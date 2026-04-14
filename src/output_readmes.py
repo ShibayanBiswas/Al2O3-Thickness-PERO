@@ -31,7 +31,7 @@ Everything here is produced by ``py run_all.py`` (or refreshed in part by ``py p
 ## Suggested reading order (for learning the results)
 
 1. **``eda/tables/README.md``** plus **``eda/plots/README.md``** -- understand the *empirical* thickness--response structure (counts, correlations, cohort summaries, and graphics).  
-2. **``models/tables/README.md``** -- scalar fit quality (in-sample) for every candidate model.  
+2. **``models/tables/README.md``** -- scalar fit quality **on the training set**, plus tuning summaries (``tuning_best_params.csv``).  
 3. **``models/diagnostics_plots/README.md``** -- *shape* of errors (parity, residuals vs thickness, QQ).  
 4. **``explainability/``** -- how the **chosen** best-overall model maps thickness to predictions (PDP/ICE, sensitivity, optional SHAP, permutation table).  
 5. **``reports/summary_report.md``** -- compact narrative with the same tables embedded.
@@ -122,7 +122,7 @@ outputs/
         paths.eda_root / "README.md",
         r"""# Exploratory Data Analysis Outputs
 
-Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
+Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**Al₂O₃ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
 
 ---
 
@@ -143,9 +143,9 @@ eda/
 
 ## Working model (descriptive only)
 
-$$
+```math
 Y_j = g_j(x) + \eta_j,\qquad j=1,\ldots,4,
-$$
+```
 
 $g_j$ might be smooth, piecewise, or **cohort-dominated** (almost constant within each discrete $x_k$). $\eta_j$ is everything else (measurement noise, batch effects, unmodeled factors). **EDA does not assume** $\mathbb{E}[\eta_j\mid x]=0$; that is a **modeling** assumption diagnosed later under ``outputs/models/diagnostics_plots/``.
 
@@ -179,7 +179,7 @@ When many cells share the same thickness, scatter plots **stack vertically**. Th
 
 ## Electrochemical shorthand
 
-Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` / ``$$...$$``.
+Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` for inline math and fenced math blocks (three backticks + ``math``) for display.
 """,
     )
 
@@ -189,6 +189,8 @@ Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in th
         r"""# Exploratory Plots Index
 
 High-resolution figures for a **1D input** $\rightarrow$ **4D output** study. Thickness $x$ is ``Al2O3 Thickness_nm``. **Format:** ``.png`` by default (``RunConfig.figure_format``). Folder names come from ``safe_filename(to_title_case(...))``.
+
+Each figure also has a **companion ``*.csv``** with the same stem (where ``save_plot_csv`` is wired in ``src/eda.py``): univariate panels, bivariate/grouped plots, correlation heatmaps, pair-plot data, etc.
 
 Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_style.py``: primary traces in **sky** blue, secondary overlays (KDE, trends) often in **orange**, cohort summaries in **green**, reference lines in **text** (light), dark navy **background** for print-ready contrast.
 
@@ -231,7 +233,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 
 | File stem | What it shows | Pedagogical note |
 | --- | --- | --- |
-| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; **$s$** is within-cohort variability, not uncertainty of the global mean unless assumptions hold. |
+| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; $s$ is **within-cohort** variability, not uncertainty of the global mean unless assumptions hold. |
 
 **Relationships** (flat):
 
@@ -456,11 +458,11 @@ models/
 
 For target $j$, with predictions $\hat{y}_{ij}$ and truths $y_{ij}$, $i=1,\ldots,n$:
 
-$$
+```math
 \mathrm{MAE}_j=\frac{1}{n}\sum_i |y_{ij}-\hat{y}_{ij}|,\quad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_i (y_{ij}-\hat{y}_{ij})^2},\quad
 R^2_j = 1 - \frac{\sum_i(y_{ij}-\hat{y}_{ij})^2}{\sum_i(y_{ij}-\bar{y}_j)^2}.
-$$
+```
 
 These quantify **fit to the tabulated rows**, not guaranteed out-of-sample generalization.
 
@@ -481,12 +483,13 @@ These quantify **fit to the tabulated rows**, not guaranteed out-of-sample gener
 
 ## Supervised learning in this project (tutorial)
 
-Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. Training uses **every row** in the table (no default train/test split), so:
+Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **scalar** $x$ to **four** predicted targets. The pipeline now uses a **train split**, and all plots are computed from **training data only**, so:
 
-- **Metrics** (MAE, RMSE, $R^2$) are **in-sample**: they measure how well $\hat{\mathbf{f}}$ reproduces the observed $(x, \mathbf{y})$ pairs you already fed in.  
+- **Training metrics** (MAE, RMSE, $R^2$) measure how well $\hat{\mathbf{f}}$ reproduces the observed training pairs $(x, \mathbf{y})$.
+- **Cross-validation** tables add an out-of-fold estimate of generalization (within the limits of small $n$).
 - They are **not** automatic certificates of future generalization to new cells or synthesis batches.
 
-**Adjusted $R^2$** penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
+**Adjusted** $R^2$ penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
 
 ---
 
@@ -508,7 +511,7 @@ With one discrete $x$ axis, flexible models can **interpolate cohorts**. High $R
         paths.models_tables / "README.md",
         r"""# Modeling Tables Index
 
-Machine-readable **in-sample** scores for every fitted estimator. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
+Machine-readable **training-set** scores for every fitted estimator, plus hyperparameter tuning summaries. Produced in ``run_all.py``; ``postprocess.py`` can regenerate the aggregate files from ``metrics__*.csv``.
 
 ---
 
@@ -518,6 +521,8 @@ Machine-readable **in-sample** scores for every fitted estimator. Produced in ``
 | --- | --- |
 | ``metrics__<ModelSafe>.csv`` | One row per target plus a synthetic row ``target == OVERALL_MEAN`` (mean of per-target metrics). ``<ModelSafe>`` matches ``safe_filename(model.name)``. |
 | ``model_comparison_overall.csv`` | One row per successfully fit model; sorted by overall RMSE. |
+| ``tuning_best_params.csv`` | Best hyperparameters found by randomized tuning (one row per model; columns are parameter keys). Includes the primary CV mean $R^2$ used by the tuner. |
+| ``model_comparison_cv_r2.csv`` | A compact leaderboard sorted by tuned primary-CV mean $R^2$ (descending). |
 | ``best_model_per_target.csv`` | Argmin of RMSE over models, separately for each target column. |
 | ``all_model_metrics.xlsx`` | Workbook: sheets ``model_comparison_overall``, ``best_model_per_target``, and ``metrics__<ModelName>`` per model. Sheet names pass through ``safe_sheet_name()`` in ``src/utils.py`` (Excel max 31 characters; ``: \\ / ? * [ ]`` removed). |
 
@@ -540,41 +545,36 @@ Machine-readable **in-sample** scores for every fitted estimator. Produced in ``
 
 For each target $j$ with observations $y_{ij}$ and predictions $\hat y_{ij}$, define residuals:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat y_{ij}.
-$$
-
+```
 Then
 
-$$
+```math
 \mathrm{MAE}_j = \frac{1}{n}\sum_i |\hat\varepsilon_{ij}|,\qquad
 \mathrm{MSE}_j = \frac{1}{n}\sum_i \hat\varepsilon_{ij}^2,\qquad
 \mathrm{RMSE}_j = \sqrt{\mathrm{MSE}_j}.
-$$
+```
+Coefficient of determination (training):
 
-Coefficient of determination (in-sample):
-
-$$
+```math
 R^2_j = 1 - \frac{\sum_i \hat\varepsilon_{ij}^2}{\sum_i (y_{ij}-\bar y_j)^2}.
-$$
-
+```
 Adjusted $R^2$ (with effective feature count $p$ used by the model spec):
 
-$$
+```math
 R^2_{j,\mathrm{adj}} = 1 - (1-R^2_j)\frac{n-1}{n-p-1}.
-$$
-
+```
 MAPE (as implemented via ``safe_mape`` with a stabilizer $\varepsilon$):
 
-$$
+```math
 \mathrm{MAPE}_j = 100\cdot \frac{1}{n}\sum_i \frac{|\hat\varepsilon_{ij}|}{\max(|y_{ij}|,\varepsilon)}.
-$$
-
+```
 Explained variance score:
 
-$$
+```math
 \mathrm{EV}_j = 1 - \frac{\mathrm{Var}(y_j-\hat y_j)}{\mathrm{Var}(y_j)}.
-$$
+```
 
 ---
 
@@ -600,11 +600,10 @@ $$
 
 ## Equations (residual form)
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat{y}_{ij},\qquad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_{i=1}^{n}\hat\varepsilon_{ij}^2}.
-$$
-
+```
 Pair tables with ``../diagnostics_plots/`` for thickness-structured residuals.
 
 ---
@@ -631,13 +630,15 @@ The **``OVERALL_MEAN``** row inside each ``metrics__*.csv`` averages these quant
 
 Naming: each figure stem is passed through ``safe_filename()`` in ``savefig()`` (``src/plots.py``). Below, ``__<base>`` means ``__`` concatenated with ``<ModelSafe>__<TargetSafe>`` as built in ``diagnostic_plots_per_target()`` (``src/diagnostics.py``).
 
+For every exported ``*.png`` in this tree, the pipeline also writes a **matching ``*.csv``** (same stem, tidy long rows) next to the figure via ``save_plot_csv()`` --- use it to rebuild tables or overlay data in another tool.
+
 ---
 
 ## Root of ``diagnostics_plots/`` (flat)
 
-| File stem (``*.png``) | Content |
+| File stem (``*.png`` / ``*.csv``) | Content |
 | --- | --- |
-| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``) |
+| ``Model Comparison Overall Error`` | Horizontal bar chart of top models by ``OVERALL_RMSE`` (from ``consolidated_model_comparison_plot``); CSV lists the same bar series. |
 
 ---
 
@@ -696,7 +697,7 @@ All multi-series panels use **outside legends** (PERO theme).
 | Distribution | Residual KDE / QQ | QQ roughly on reference | Heavy tails or skew in residuals |
 | Distribution | Predicted vs actual KDE | Overlapping modes | Systematic shift or width mismatch |
 
-At **$n=51$**, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
+At $n=51$, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
 
 ---
 
@@ -713,7 +714,7 @@ At **$n=51$**, treat QQ and fine-grained density features as **suggestive**, not
         paths.explain_root / "README.md",
         r"""# Explainability Outputs
 
-Interpretation of how **$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
+Interpretation of how **Al₂O₃ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
 
 ---
 
@@ -737,9 +738,9 @@ explainability/
 
 **Permutation importance** -- positive drop in $R^2$ when $x$ is shuffled:
 
-$$
-\Delta R^2 = R^2(\text{data}) - R^2(\pi \circ x).
-$$
+```math
+\Delta R^{2} = R^{2}(\text{data}) - R^{2}(\pi \circ x).
+```
 
 **PDP / ICE** -- mean response vs $x$ plus bootstrap ensemble of univariate prediction curves (ICE band).
 
@@ -751,9 +752,9 @@ $$
 
 When SHAP applies,
 
-$$
+```math
 \hat{y}(x) \approx \mathbb{E}[\hat{y}] + \phi(x).
-$$
+```
 
 We export **beeswarm**, **bar**, **dependence** only -- **no waterfall figures**. Per-target clones are fit for multi-output models. All SHAP panels use **outside legends** (PERO theme).
 
@@ -782,6 +783,8 @@ Explainability is run for the **best overall** model (lowest mean RMSE across ta
         r"""# Explainability Plots Index
 
 Each graphic studies $\hat{y}:\mathbb{R}_{\ge0}\to\mathbb{R}$ **per target** for the champion model. Stems are built in ``src/explainability.py`` and saved with ``savefig()``, so the **full stem** (including the target suffix) is normalized by ``safe_filename()``.
+
+PDP/ICE and sensitivity figures already ship **``*.csv``** next to the ``*.png``; SHAP stems (``shap_*``) also have matching CSVs when SHAP runs successfully.
 
 Convention below: ``<TargetRaw>`` is the **exact** target column string from the dataset; on disk it appears as ``safe_filename("...__" + <TargetRaw>)`` merged into one stem.
 
@@ -866,9 +869,9 @@ Single CSV written by ``permutation_importance_single_feature()`` in ``src/expla
 
 For target $j$,
 
-$$
-\Delta R^2_j = R^2_j - R^2_j(\pi),
-$$
+```math
+\Delta R^{2}_j = R^{2}_j - R^{2}_j(\pi),
+```
 
 with $\pi$ a random permutation of the thickness column.
 
@@ -876,10 +879,10 @@ with $\pi$ a random permutation of the thickness column.
 
 ## How to read
 
-| $\Delta R^2_j$ | Reading |
+| $\Delta R^{2}_j$ | Reading |
 | --- | --- |
 | Large | Fit leans on authentic ordering of $x$ |
-| Tiny | Thickness weak in-sample or noise-dominated |
+| Tiny | Thickness weak on the training sample or noise-dominated |
 
 Pair with PDP/ICE and (if present) SHAP $|\phi|$ --- tables encode **stability**, curves encode **shape**.
 
@@ -942,11 +945,11 @@ When writing prose, reference **specific** PNGs by path (e.g. ``outputs/models/d
 
 ## Notation (GitHub)
 
-Use ``$...$`` inline and ``$$...$$`` display. Example:
+Use ``$...$`` for inline math and a fenced math block (three backticks + ``math``) for display. Example:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij} - \hat{y}_{ij}.
-$$
+```
 
 Exported figures use Matplotlib mathtext ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_{2}\mathrm{O}_{3}$).
 

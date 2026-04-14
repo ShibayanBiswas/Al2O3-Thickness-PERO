@@ -1,0 +1,26 @@
+series,row,col,spearman_rho_s
+heatmap,Thickness,Thickness,1.0
+heatmap,Thickness,Rct Initial,0.06889314168321889
+heatmap,Thickness,Coulombic Efficiency,-0.05555898522840233
+heatmap,Thickness,Reversible Capacity,0.044447188182721864
+heatmap,Thickness,Capacity Retention,-0.11334032986594075
+heatmap,Rct Initial,Thickness,0.06889314168321889
+heatmap,Rct Initial,Rct Initial,1.0
+heatmap,Rct Initial,Coulombic Efficiency,-0.5384615384615384
+heatmap,Rct Initial,Reversible Capacity,-0.367032967032967
+heatmap,Rct Initial,Capacity Retention,-0.978021978021978
+heatmap,Coulombic Efficiency,Thickness,-0.05555898522840233
+heatmap,Coulombic Efficiency,Rct Initial,-0.5384615384615384
+heatmap,Coulombic Efficiency,Coulombic Efficiency,1.0
+heatmap,Coulombic Efficiency,Reversible Capacity,0.7978021978021979
+heatmap,Coulombic Efficiency,Capacity Retention,0.5648351648351648
+heatmap,Reversible Capacity,Thickness,0.044447188182721864
+heatmap,Reversible Capacity,Rct Initial,-0.367032967032967
+heatmap,Reversible Capacity,Coulombic Efficiency,0.7978021978021979
+heatmap,Reversible Capacity,Reversible Capacity,1.0
+heatmap,Reversible Capacity,Capacity Retention,0.35824175824175825
+heatmap,Capacity Retention,Thickness,-0.11334032986594075
+heatmap,Capacity Retention,Rct Initial,-0.978021978021978
+heatmap,Capacity Retention,Coulombic Efficiency,0.5648351648351648
+heatmap,Capacity Retention,Reversible Capacity,0.35824175824175825
+heatmap,Capacity Retention,Capacity Retention,1.0

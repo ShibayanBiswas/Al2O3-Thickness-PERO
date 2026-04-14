@@ -178,6 +178,11 @@ def run_deep_eda(
         legend_outside_top_right(ax, ncol=1, title="Density")
         polish_axes(ax)
         savefig(fig, var_dir, f"Histogram And Kernel Density", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+        save_plot_csv(
+            var_dir,
+            "Histogram And Kernel Density",
+            [{"series": "raw_sample", "value": float(v)} for v in vals if np.isfinite(v)],
+        )
 
         # Box + Violin
         fig, axes = plt.subplots(1, 2, figsize=(7.5, 7.5))
@@ -201,6 +206,11 @@ def run_deep_eda(
         )
         polish_axes(axes[1])
         savefig(fig, var_dir, f"Box And Violin", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+        save_plot_csv(
+            var_dir,
+            "Box And Violin",
+            [{"series": "raw_sample", "value": float(v)} for v in vals if np.isfinite(v)],
+        )
 
         # Raincloud Style Plot
         try:
@@ -233,6 +243,11 @@ def run_deep_eda(
             )
             polish_axes(ax)
             savefig(fig, var_dir, "Raincloud Plot", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+            save_plot_csv(
+                var_dir,
+                "Raincloud Plot",
+                [{"series": "raw_sample", "value": float(v)} for v in vals if np.isfinite(v)],
+            )
         except Exception:
             pass
 
@@ -249,6 +264,18 @@ def run_deep_eda(
         legend_outside_top_right(ax, ncol=1)
         polish_axes(ax)
         savefig(fig, var_dir, f"Empirical Cumulative Distribution", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+        _ecdf_rows = []
+        if x_ecdf.size:
+            for xa, ya, ys in zip(x_ecdf, y_ecdf, y_ecdf_s, strict=False):
+                _ecdf_rows.append(
+                    {
+                        "series": "ecdf",
+                        "x": float(xa),
+                        "cumulative_probability": float(ya),
+                        "cumulative_smoothed": float(ys),
+                    }
+                )
+        save_plot_csv(var_dir, "Empirical Cumulative Distribution", _ecdf_rows)
 
         # Scaling Comparison Plot
         try:
@@ -291,6 +318,35 @@ def run_deep_eda(
                 legend_outside_top_right(ax, ncol=1)
                 polish_axes(ax)
                 savefig(fig, var_dir, "Scaling Comparison Density", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+                _sc_rows: list[dict] = [{"series": "original_sample", "value": float(t)} for t in v if np.isfinite(t)]
+                _sc_rows.extend({"series": "standard_scaled_sample", "value": float(t)} for t in z if np.isfinite(t))
+                _sc_rows.extend({"series": "minmax_scaled_sample", "value": float(t)} for t in mm if np.isfinite(t))
+                for lab, arr in scalers.items():
+                    for t in np.asarray(arr, dtype=float).ravel():
+                        if np.isfinite(t):
+                            _sc_rows.append({"series": f"scaled::{lab}", "value": float(t)})
+                try:
+                    from scipy.stats import gaussian_kde
+
+                    lo_g = float(np.min(v))
+                    hi_g = float(np.max(v))
+                    if hi_g > lo_g:
+                        grid_g = np.linspace(lo_g, hi_g, 150)
+                        for lab2, arr2 in (
+                            ("original_kde", v),
+                            ("standard_kde", z),
+                            ("minmax_kde", mm),
+                            *[(f"kde::{k}", np.asarray(a, dtype=float)) for k, a in scalers.items()],
+                        ):
+                            a2 = np.asarray(arr2, dtype=float)
+                            a2 = a2[np.isfinite(a2)]
+                            if a2.size >= 2 and np.nanstd(a2, ddof=1) > 0:
+                                kde = gaussian_kde(a2)
+                                for xi, di in zip(grid_g, kde(grid_g), strict=False):
+                                    _sc_rows.append({"series": lab2, "grid_x": float(xi), "density": float(di)})
+                except Exception:
+                    pass
+                save_plot_csv(var_dir, "Scaling Comparison Density", _sc_rows)
         except Exception:
             pass
 
@@ -576,6 +632,13 @@ def run_deep_eda(
     fig.tight_layout(pad=1.2)
     polish_axes(ax)
     savefig(fig, out_rel, "Correlation Heatmap Pearson", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+    _p_disp = pearson_corr.rename(index=display_name, columns=display_name)
+    _ph_rows = [
+        {"series": "heatmap", "row": str(i), "col": str(j), "pearson_rho": float(_p_disp.loc[i, j])}
+        for i in _p_disp.index
+        for j in _p_disp.columns
+    ]
+    save_plot_csv(out_rel, "Correlation Heatmap Pearson", _ph_rows)
 
     fig, ax = with_axes(figsize=(7.5, 7.5))
     set_dark_background(fig, ax)
@@ -597,6 +660,13 @@ def run_deep_eda(
     fig.tight_layout(pad=1.2)
     polish_axes(ax)
     savefig(fig, out_rel, "Correlation Heatmap Spearman", dpi=cfg.figure_dpi, fmt=cfg.figure_format)
+    _s_disp = spearman_corr.rename(index=display_name, columns=display_name)
+    _sh_rows = [
+        {"series": "heatmap", "row": str(i), "col": str(j), "spearman_rho_s": float(_s_disp.loc[i, j])}
+        for i in _s_disp.index
+        for j in _s_disp.columns
+    ]
+    save_plot_csv(out_rel, "Correlation Heatmap Spearman", _sh_rows)
 
     # Pairplot (can be heavy but dataset is tiny)
     try:
@@ -620,6 +690,11 @@ def run_deep_eda(
         out_path = out_rel / f"{safe_filename('Pair Plot Numeric Variables')}.{cfg.figure_format}"
         pp.fig.savefig(out_path, dpi=cfg.figure_dpi, bbox_inches="tight")
         plt.close(pp.fig)
+        save_plot_csv(
+            out_rel,
+            "Pair Plot Numeric Variables",
+            num_df_disp.reset_index(drop=True).to_dict(orient="records"),
+        )
     except Exception:
         # Safe fallback (never crash)
         pass

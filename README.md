@@ -8,7 +8,7 @@ A **PERO-grade** workflow (polished, export-ready, reproducible, organized) for 
 
 Treat thickness as a scalar design coordinate $x$ (nanometers) and the measurements as a vector response
 
-$$
+```math
 \mathbf{y}(x)
 =
 \bigl(
@@ -19,25 +19,25 @@ y_{\mathrm{ret}}(x)
 \bigr)^{\top}
 \in \mathbb{R}^{4},
 \qquad x\ \text{is }\mathrm{Al}_{2}\mathrm{O}_{3}\text{ thickness (nm).}
-$$
+```
 
-Each fitted map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ is a **multi-output regression surface** over a 1D domain (**$p=1$**). The objects you care about are the coordinate graphs $\hat{y}_j(x)$, in-sample residuals $\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}$, and local slopes $\mathrm{d}\hat{y}_j/\mathrm{d}x$—not combinatorial feature attribution.
+Each fitted map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ is a **multi-output regression surface** over a 1D domain with **one engineered input** ($p=1$). The objects you care about are the coordinate graphs $\hat{y}_j(x)$, in-sample residuals $\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}$, and local slopes $\mathrm{d}\hat{y}_j/\mathrm{d}x$—not combinatorial feature attribution.
 
 ### Error metrics (in-sample)
 
-$$
+```math
 \mathrm{MAE}_j = \frac{1}{n}\sum_{i=1}^{n} \bigl|\hat{\varepsilon}_{ij}\bigr|,
 \qquad
 \mathrm{RMSE}_j = \sqrt{\frac{1}{n}\sum_{i=1}^{n} \hat{\varepsilon}_{ij}^{2}},
 \qquad
 R^{2}_j = 1 - \frac{\sum_{i}\hat{\varepsilon}_{ij}^{2}}{\sum_{i}(y_{ij}-\bar{y}_j)^{2}}.
-$$
+```
 
 ### SHAP (optional) without waterfall clutter
 
 When the SHAP library applies to the chosen estimator, attributions follow the additive form $\hat{y} \approx \mathbb{E}[\hat{y}] + \phi(x)$ in 1D. This repository exports **beeswarm, bar, and dependence** views only—**no waterfall plots**—so figures stay legible beside dense thesis prose.
 
-> **Markdown math on GitHub:** this repository uses `$...$` (inline) and `$$...$$` (display). Plot labels use Matplotlib mathtext with the same symbols (e.g. $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$).
+> **Markdown math on GitHub:** use `$...$` for inline expressions. For display, use a **fenced math block**: a line with three backticks and the word `math`, your TeX on following lines, then a line with three backticks alone (see GitHub’s “Writing mathematical expressions”). Plot labels use Matplotlib mathtext with the same symbols (e.g. $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$).
 
 ---
 
@@ -157,4 +157,4 @@ SHAP, XGBoost, LightGBM, and CatBoost are **autodetected**. Missing libraries si
 
 ## Figure quality and legends
 
-Exports use the **PERO dark theme** (navy field, high-luminance ink, Stix mathtext) with **$\mathrm{Al}_{2}\mathrm{O}_{3}$-aware** axis labels. **Legends are placed outside** the axes (`bbox_to_anchor` to the right) so scatter, ICE bundles, and KDEs stay unobstructed; correlation heatmaps use color-scale captions in $\rho/\rho_{\mathrm{s}}$ notation.
+Exports use the **PERO dark theme** (navy field, high-luminance ink, Stix mathtext) with **Al₂O₃-aware** axis labels. **Legends are placed outside** the axes (`bbox_to_anchor` to the right) so scatter, ICE bundles, and KDEs stay unobstructed; correlation heatmaps use color-scale captions in $\rho/\rho_{\mathrm{s}}$ notation.
