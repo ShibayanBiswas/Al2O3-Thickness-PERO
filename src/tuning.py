@@ -56,15 +56,35 @@ def tune_estimator(
     """
     Randomized hyperparameter tuning for a (potentially multioutput) regressor.
     Returns (best_estimator, best_params, best_cv_r2_mean).
-    """
-    if not param_distributions:
-        # No tuning for this estimator.
-        return estimator, {}, float("nan")
 
-    from sklearn.model_selection import RandomizedSearchCV
+    When ``param_distributions`` is empty (nothing to tune), we still report
+    ``best_cv_r2_mean`` as the mean out-of-fold R² on the primary CV splitter,
+    so leaderboard CSVs stay comparable to tuned models.
+    """
     from sklearn.metrics import make_scorer
 
     scorer = make_scorer(_multioutput_r2_uniform, greater_is_better=True)
+
+    if not param_distributions:
+        from sklearn.model_selection import cross_val_score
+
+        try:
+            scores = cross_val_score(
+                estimator,
+                X,
+                Y,
+                scoring=scorer,
+                cv=cv_primary,
+                n_jobs=None,
+                error_score=np.nan,
+            )
+            scores = np.asarray(scores, dtype=float)
+            mean_score = float(np.nanmean(scores)) if np.any(np.isfinite(scores)) else float("nan")
+        except Exception:
+            mean_score = float("nan")
+        return estimator, {}, mean_score
+
+    from sklearn.model_selection import RandomizedSearchCV
 
     search = RandomizedSearchCV(
         estimator=estimator,

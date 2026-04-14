@@ -284,7 +284,9 @@ def main() -> int:
         # A simple CV-centric comparison: rank by primary CV mean R2 (descending).
         if "best_cv_r2_primary" in tuning_tbl.columns:
             comp_cv = tuning_tbl[["model", "best_cv_r2_primary"]].copy()
-            comp_cv = comp_cv.sort_values("best_cv_r2_primary", ascending=False).reset_index(drop=True)
+            comp_cv = comp_cv.sort_values(
+                "best_cv_r2_primary", ascending=False, na_position="last"
+            ).reset_index(drop=True)
             comp_cv["rank_by_cv_r2"] = np.arange(1, comp_cv.shape[0] + 1)
             comp_cv.to_csv(paths.models_tables / "model_comparison_cv_r2.csv", index=False)
 
@@ -295,7 +297,15 @@ def main() -> int:
         if comp_cv_path.exists():
             comp_cv = pd.read_csv(comp_cv_path)
             if comp_cv.shape[0] > 0 and "model" in comp_cv.columns:
-                best_overall_name = str(comp_cv.iloc[0]["model"])
+                if "best_cv_r2_primary" in comp_cv.columns:
+                    cv_scores = pd.to_numeric(comp_cv["best_cv_r2_primary"], errors="coerce")
+                    finite = comp_cv[np.isfinite(cv_scores.to_numpy(dtype=float))]
+                    if finite.shape[0] > 0:
+                        best_overall_name = str(finite.iloc[0]["model"])
+                    else:
+                        best_overall_name = str(comp_cv.iloc[0]["model"])
+                else:
+                    best_overall_name = str(comp_cv.iloc[0]["model"])
     except Exception:
         pass
 

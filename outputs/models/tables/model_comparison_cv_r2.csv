@@ -1,6 +1,6 @@
 model,best_cv_r2_primary,rank_by_cv_r2
-K Nearest Neighbors Five,-98.64072307105775,1
-K Nearest Neighbors Three,-98.64072307105775,2
+K Nearest Neighbors Three,-98.64072307105775,1
+K Nearest Neighbors Five,-98.64072307105775,2
 Support Vector Regression,-99.06866967847138,3
 Bagging Regressor,-122.77268778175512,4
 Random Forest,-128.32427560940448,5
@@ -9,13 +9,13 @@ Adaptive Boosting,-132.0852390658834,7
 Extra Trees,-140.9531337815615,8
 Gaussian Process Regression,-141.5786214304178,9
 Gradient Boosting,-141.9177713840865,10
-Lasso Regression,-149.27924021485984,11
-Elastic Net Regression,-149.2795020178919,12
-Ridge Regression,-149.27960176775667,13
-Polynomial Ridge Degree 2,-158.58826456365264,14
-Polynomial Ridge Degree 3,-247.5758798315886,15
-Histogram Gradient Boosting,-252.87719027504144,16
-Stochastic Gradient Regression,-434.2303893532224,17
-Linear Regression,,18
-Polynomial Regression Degree 2,,19
-Polynomial Regression Degree 3,,20
+Linear Regression,-149.27923669918525,11
+Lasso Regression,-149.27924021485984,12
+Elastic Net Regression,-149.2795020178919,13
+Ridge Regression,-149.27960176775667,14
+Polynomial Regression Degree 2,-158.58723706228363,15
+Polynomial Ridge Degree 2,-158.58826456365264,16
+Polynomial Ridge Degree 3,-247.5758798315886,17
+Histogram Gradient Boosting,-252.87719027504144,18
+Stochastic Gradient Regression,-434.2303893532224,19
+Polynomial Regression Degree 3,-1080302.953353379,20
