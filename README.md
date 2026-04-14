@@ -21,7 +21,7 @@ y_{\mathrm{ret}}(x)
 \qquad x\ \text{is }\mathrm{Al}_{2}\mathrm{O}_{3}\text{ thickness (nm).}
 ```
 
-Each fitted map $\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}$ is a **multi-output regression surface** over a 1D domain with **one engineered input** ($p=1$). The objects you care about are the coordinate graphs $\hat{y}_j(x)$, in-sample residuals $\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}$, and local slopes $\mathrm{d}\hat{y}_j/\mathrm{d}x$—not combinatorial feature attribution.
+Each fitted map $`\hat{\mathbf{f}} : x \mapsto \widehat{\mathbf{y}}`$ is a **multi-output regression surface** over a 1D domain with **one engineered input** ($p=1$). The objects you care about are the coordinate graphs $`\hat{y}_j(x)`$, in-sample residuals $`\hat{\varepsilon}_{ij} = y_{ij}-\hat{y}_{ij}`$, and local slopes $`\mathrm{d}\hat{y}_j/\mathrm{d}x`$—not combinatorial feature attribution.
 
 ### Error metrics (in-sample)
 
