@@ -34,41 +34,36 @@ Machine-readable **training-set** scores for every fitted estimator, plus hyperp
 
 For each target $j$ with observations $y_{ij}$ and predictions $\hat y_{ij}$, define residuals:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat y_{ij}.
-$$
-
+```
 Then
 
-$$
+```math
 \mathrm{MAE}_j = \frac{1}{n}\sum_i |\hat\varepsilon_{ij}|,\qquad
 \mathrm{MSE}_j = \frac{1}{n}\sum_i \hat\varepsilon_{ij}^2,\qquad
 \mathrm{RMSE}_j = \sqrt{\mathrm{MSE}_j}.
-$$
-
+```
 Coefficient of determination (training):
 
-$$
+```math
 R^2_j = 1 - \frac{\sum_i \hat\varepsilon_{ij}^2}{\sum_i (y_{ij}-\bar y_j)^2}.
-$$
-
+```
 Adjusted $R^2$ (with effective feature count $p$ used by the model spec):
 
-$$
+```math
 R^2_{j,\mathrm{adj}} = 1 - (1-R^2_j)\frac{n-1}{n-p-1}.
-$$
-
+```
 MAPE (as implemented via ``safe_mape`` with a stabilizer $\varepsilon$):
 
-$$
+```math
 \mathrm{MAPE}_j = 100\cdot \frac{1}{n}\sum_i \frac{|\hat\varepsilon_{ij}|}{\max(|y_{ij}|,\varepsilon)}.
-$$
-
+```
 Explained variance score:
 
-$$
+```math
 \mathrm{EV}_j = 1 - \frac{\mathrm{Var}(y_j-\hat y_j)}{\mathrm{Var}(y_j)}.
-$$
+```
 
 ---
 
@@ -94,11 +89,10 @@ $$
 
 ## Equations (residual form)
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat{y}_{ij},\qquad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_{i=1}^{n}\hat\varepsilon_{ij}^2}.
-$$
-
+```
 Pair tables with ``../diagnostics_plots/`` for thickness-structured residuals.
 
 ---

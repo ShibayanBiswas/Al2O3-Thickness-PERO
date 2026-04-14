@@ -1,6 +1,6 @@
 # Explainability Outputs
 
-Interpretation of how **$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
+Interpretation of how **Al₂O₃ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
 
 ---
 
@@ -24,9 +24,9 @@ explainability/
 
 **Permutation importance** -- positive drop in $R^2$ when $x$ is shuffled:
 
-$$
-\Delta R^2 = R^2(\text{data}) - R^2(\pi \circ x).
-$$
+```math
+\Delta R^{2} = R^{2}(\text{data}) - R^{2}(\pi \circ x).
+```
 
 **PDP / ICE** -- mean response vs $x$ plus bootstrap ensemble of univariate prediction curves (ICE band).
 
@@ -38,9 +38,9 @@ $$
 
 When SHAP applies,
 
-$$
+```math
 \hat{y}(x) \approx \mathbb{E}[\hat{y}] + \phi(x).
-$$
+```
 
 We export **beeswarm**, **bar**, **dependence** only -- **no waterfall figures**. Per-target clones are fit for multi-output models. All SHAP panels use **outside legends** (PERO theme).
 

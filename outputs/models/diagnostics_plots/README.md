@@ -71,7 +71,7 @@ All multi-series panels use **outside legends** (PERO theme).
 | Distribution | Residual KDE / QQ | QQ roughly on reference | Heavy tails or skew in residuals |
 | Distribution | Predicted vs actual KDE | Overlapping modes | Systematic shift or width mismatch |
 
-At **$n=51$**, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
+At $n=51$, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
 
 ---
 

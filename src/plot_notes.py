@@ -19,7 +19,7 @@ class PlotNoteRule:
 
 
 def _default_rules() -> list[PlotNoteRule]:
-    # NOTE: Keep math GitHub-friendly: $...$ for inline, $$...$$ for display.
+    # NOTE: Keep math GitHub-friendly: $...$ for inline; fenced ```math blocks for display in READMEs.
     return [
         # --- EDA ---
         PlotNoteRule(

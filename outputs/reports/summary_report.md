@@ -92,6 +92,6 @@ Consult `outputs/eda/plots/` and `outputs/models/diagnostics_plots/` for overlap
 
 Residuals $\hat{\varepsilon}_{ij} = y_{ij} - \hat{y}_{ij}$. For each target $j$:
 
-$$
+```math
 \mathrm{MAE}_j = \frac{1}{n}\sum_{i=1}^{n}\bigl|\hat{\varepsilon}_{ij}\bigr|,\qquad \mathrm{RMSE}_j = \sqrt{\frac{1}{n}\sum_{i=1}^{n}\hat{\varepsilon}_{ij}^{2}},\qquad R^{2}_j = 1 - \frac{\sum_i \hat{\varepsilon}_{ij}^{2}}{\sum_i (y_{ij}-\bar{y}_j)^{2}}.
-$$
+```

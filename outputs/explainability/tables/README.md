@@ -28,9 +28,9 @@ Single CSV written by ``permutation_importance_single_feature()`` in ``src/expla
 
 For target $j$,
 
-$$
-\Delta R^2_j = R^2_j - R^2_j(\pi),
-$$
+```math
+\Delta R^{2}_j = R^{2}_j - R^{2}_j(\pi),
+```
 
 with $\pi$ a random permutation of the thickness column.
 
@@ -38,7 +38,7 @@ with $\pi$ a random permutation of the thickness column.
 
 ## How to read
 
-| $\Delta R^2_j$ | Reading |
+| $\Delta R^{2}_j$ | Reading |
 | --- | --- |
 | Large | Fit leans on authentic ordering of $x$ |
 | Tiny | Thickness weak on the training sample or noise-dominated |

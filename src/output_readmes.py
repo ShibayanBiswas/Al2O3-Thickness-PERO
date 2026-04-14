@@ -122,7 +122,7 @@ outputs/
         paths.eda_root / "README.md",
         r"""# Exploratory Data Analysis Outputs
 
-Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
+Exploratory Data Analysis (EDA) answers: **what does the dataset actually look like** before we commit to a parametric model? Here the experimental design is unusually simple: one controlled input (**Al₂O₃ thickness** $x\ge 0$ nm, column ``Al2O3 Thickness_nm``) and **four** measured outputs (charge-transfer resistance, coulombic efficiency, reversible capacity, capacity retention). EDA therefore focuses on (i) **where data mass lives** (especially $x=0$ vs sparse positive thicknesses), (ii) **how each $Y_j$ varies with $x$** when many points share the same $x$, and (iii) **linear vs rank association** as a first-pass summary, *not* as a substitute for plotting conditional means.
 
 ---
 
@@ -143,9 +143,9 @@ eda/
 
 ## Working model (descriptive only)
 
-$$
+```math
 Y_j = g_j(x) + \eta_j,\qquad j=1,\ldots,4,
-$$
+```
 
 $g_j$ might be smooth, piecewise, or **cohort-dominated** (almost constant within each discrete $x_k$). $\eta_j$ is everything else (measurement noise, batch effects, unmodeled factors). **EDA does not assume** $\mathbb{E}[\eta_j\mid x]=0$; that is a **modeling** assumption diagnosed later under ``outputs/models/diagnostics_plots/``.
 
@@ -179,7 +179,7 @@ When many cells share the same thickness, scatter plots **stack vertically**. Th
 
 ## Electrochemical shorthand
 
-Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` / ``$$...$$``.
+Figures use mathtext: $R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, etc. Markdown in these READMEs uses GitHub ``$...$`` for inline math and fenced math blocks (three backticks + ``math``) for display.
 """,
     )
 
@@ -233,7 +233,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 
 | File stem | What it shows | Pedagogical note |
 | --- | --- | --- |
-| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; **$s$** is within-cohort variability, not uncertainty of the global mean unless assumptions hold. |
+| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; $s$ is **within-cohort** variability, not uncertainty of the global mean unless assumptions hold. |
 
 **Relationships** (flat):
 
@@ -458,11 +458,11 @@ models/
 
 For target $j$, with predictions $\hat{y}_{ij}$ and truths $y_{ij}$, $i=1,\ldots,n$:
 
-$$
+```math
 \mathrm{MAE}_j=\frac{1}{n}\sum_i |y_{ij}-\hat{y}_{ij}|,\quad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_i (y_{ij}-\hat{y}_{ij})^2},\quad
 R^2_j = 1 - \frac{\sum_i(y_{ij}-\hat{y}_{ij})^2}{\sum_i(y_{ij}-\bar{y}_j)^2}.
-$$
+```
 
 These quantify **fit to the tabulated rows**, not guaranteed out-of-sample generalization.
 
@@ -489,7 +489,7 @@ Each algorithm learns a map $\hat{\mathbf{f}}:\mathbb{R}\to\mathbb{R}^4$ from **
 - **Cross-validation** tables add an out-of-fold estimate of generalization (within the limits of small $n$).
 - They are **not** automatic certificates of future generalization to new cells or synthesis batches.
 
-**Adjusted $R^2$** penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
+**Adjusted** $R^2$ penalises extra effective parameters; compare it to plain $R^2$ when choosing between a simple and a flexible estimator.
 
 ---
 
@@ -545,41 +545,36 @@ Machine-readable **training-set** scores for every fitted estimator, plus hyperp
 
 For each target $j$ with observations $y_{ij}$ and predictions $\hat y_{ij}$, define residuals:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat y_{ij}.
-$$
-
+```
 Then
 
-$$
+```math
 \mathrm{MAE}_j = \frac{1}{n}\sum_i |\hat\varepsilon_{ij}|,\qquad
 \mathrm{MSE}_j = \frac{1}{n}\sum_i \hat\varepsilon_{ij}^2,\qquad
 \mathrm{RMSE}_j = \sqrt{\mathrm{MSE}_j}.
-$$
-
+```
 Coefficient of determination (training):
 
-$$
+```math
 R^2_j = 1 - \frac{\sum_i \hat\varepsilon_{ij}^2}{\sum_i (y_{ij}-\bar y_j)^2}.
-$$
-
+```
 Adjusted $R^2$ (with effective feature count $p$ used by the model spec):
 
-$$
+```math
 R^2_{j,\mathrm{adj}} = 1 - (1-R^2_j)\frac{n-1}{n-p-1}.
-$$
-
+```
 MAPE (as implemented via ``safe_mape`` with a stabilizer $\varepsilon$):
 
-$$
+```math
 \mathrm{MAPE}_j = 100\cdot \frac{1}{n}\sum_i \frac{|\hat\varepsilon_{ij}|}{\max(|y_{ij}|,\varepsilon)}.
-$$
-
+```
 Explained variance score:
 
-$$
+```math
 \mathrm{EV}_j = 1 - \frac{\mathrm{Var}(y_j-\hat y_j)}{\mathrm{Var}(y_j)}.
-$$
+```
 
 ---
 
@@ -605,11 +600,10 @@ $$
 
 ## Equations (residual form)
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij}-\hat{y}_{ij},\qquad
 \mathrm{RMSE}_j=\sqrt{\frac{1}{n}\sum_{i=1}^{n}\hat\varepsilon_{ij}^2}.
-$$
-
+```
 Pair tables with ``../diagnostics_plots/`` for thickness-structured residuals.
 
 ---
@@ -703,7 +697,7 @@ All multi-series panels use **outside legends** (PERO theme).
 | Distribution | Residual KDE / QQ | QQ roughly on reference | Heavy tails or skew in residuals |
 | Distribution | Predicted vs actual KDE | Overlapping modes | Systematic shift or width mismatch |
 
-At **$n=51$**, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
+At $n=51$, treat QQ and fine-grained density features as **suggestive**, not definitive; thickness-residual plots carry more design-specific weight.
 
 ---
 
@@ -720,7 +714,7 @@ At **$n=51$**, treat QQ and fine-grained density features as **suggestive**, not
         paths.explain_root / "README.md",
         r"""# Explainability Outputs
 
-Interpretation of how **$\mathrm{Al}_{2}\mathrm{O}_{3}$ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
+Interpretation of how **Al₂O₃ thickness** $x$ (``Al2O3 Thickness_nm``) steers the **best-overall** model (lowest mean RMSE across targets), refit on the full sample in ``run_all.py`` via ``run_explainability()`` (``src/explainability.py``).
 
 ---
 
@@ -744,9 +738,9 @@ explainability/
 
 **Permutation importance** -- positive drop in $R^2$ when $x$ is shuffled:
 
-$$
-\Delta R^2 = R^2(\text{data}) - R^2(\pi \circ x).
-$$
+```math
+\Delta R^{2} = R^{2}(\text{data}) - R^{2}(\pi \circ x).
+```
 
 **PDP / ICE** -- mean response vs $x$ plus bootstrap ensemble of univariate prediction curves (ICE band).
 
@@ -758,9 +752,9 @@ $$
 
 When SHAP applies,
 
-$$
+```math
 \hat{y}(x) \approx \mathbb{E}[\hat{y}] + \phi(x).
-$$
+```
 
 We export **beeswarm**, **bar**, **dependence** only -- **no waterfall figures**. Per-target clones are fit for multi-output models. All SHAP panels use **outside legends** (PERO theme).
 
@@ -875,9 +869,9 @@ Single CSV written by ``permutation_importance_single_feature()`` in ``src/expla
 
 For target $j$,
 
-$$
-\Delta R^2_j = R^2_j - R^2_j(\pi),
-$$
+```math
+\Delta R^{2}_j = R^{2}_j - R^{2}_j(\pi),
+```
 
 with $\pi$ a random permutation of the thickness column.
 
@@ -885,7 +879,7 @@ with $\pi$ a random permutation of the thickness column.
 
 ## How to read
 
-| $\Delta R^2_j$ | Reading |
+| $\Delta R^{2}_j$ | Reading |
 | --- | --- |
 | Large | Fit leans on authentic ordering of $x$ |
 | Tiny | Thickness weak on the training sample or noise-dominated |
@@ -951,11 +945,11 @@ When writing prose, reference **specific** PNGs by path (e.g. ``outputs/models/d
 
 ## Notation (GitHub)
 
-Use ``$...$`` inline and ``$$...$$`` display. Example:
+Use ``$...$`` for inline math and a fenced math block (three backticks + ``math``) for display. Example:
 
-$$
+```math
 \hat\varepsilon_{ij} = y_{ij} - \hat{y}_{ij}.
-$$
+```
 
 Exported figures use Matplotlib mathtext ($R_{\mathrm{ct}}$, $Q_{\mathrm{rev}}$, $\mathrm{Al}_{2}\mathrm{O}_{3}$).
 

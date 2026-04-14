@@ -6,13 +6,13 @@ Authoritative data live here so provenance never forks silently. The pipeline re
 
 ## Design & measurement model (conceptual)
 
-Rows index experimental cells. The sole **controlled** continuous coordinate is **$\mathrm{Al}_{2}\mathrm{O}_{3}$** thickness $x\ge 0$ (nanometres), paired with four electrochemical responses:
+Rows index experimental cells. The sole **controlled** continuous coordinate is **Al₂O₃ thickness** $x\ge 0$ (nanometres), paired with four electrochemical responses:
 
-$$
+```math
 y_j \;=\; f_j(x) + \varepsilon_j,
 \qquad j=1,\ldots,4,
 \qquad \mathbb{E}[\varepsilon_j \mid x]=0 \;\text{(working identity).}
-$$
+```
 
 The maps $f_j$ may be smooth, piecewise, or cohort-dominated; with replicated $x$ atoms, **within-level** and **between-level** variance must be read together—marginal correlations are not sufficient statistics.
 

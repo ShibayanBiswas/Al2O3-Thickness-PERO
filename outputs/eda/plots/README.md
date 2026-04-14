@@ -45,7 +45,7 @@ Styling is unified through ``apply_pero_theme`` + ``PERO`` palette in ``src/viz_
 
 | File stem | What it shows | Pedagogical note |
 | --- | --- | --- |
-| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; **$s$** is within-cohort variability, not uncertainty of the global mean unless assumptions hold. |
+| ``Group Mean With Uncertainty`` | $\bar Y_j \pm s$ by $x$ | Connects discrete cohorts; $s$ is **within-cohort** variability, not uncertainty of the global mean unless assumptions hold. |
 
 **Relationships** (flat):
 
