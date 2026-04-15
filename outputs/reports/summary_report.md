@@ -72,7 +72,7 @@ This contrasts the large `0.0 nm` cluster against the pooled non-zero thicknesse
 | Elastic Net Regression | 17.586383426293246 | 24.023706983966655 | 0.33211831321994134 | 0.27646150598826985 | 37.86711074396536 | 14 |
 | Ridge Regression | 17.58638523634016 | 24.023706984116924 | 0.33211831321501495 | 0.2764615059829329 | 37.86711925484783 | 15 |
 
-- **Best overall model (by overall mean RMSE)**: `K Nearest Neighbors Three`
+- **Best overall model (by overall mean RMSE)**: `Theil Sen Regression`
 
 ### Best model per target (by RMSE)
 | target | best_model_by_rmse | RMSE | R2 |

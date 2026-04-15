@@ -1,21 +1,27 @@
 model,best_cv_r2_primary,rank_by_cv_r2
-K Nearest Neighbors Three,-98.64072307105775,1
+Theil Sen Regression,-95.84007856229599,1
 K Nearest Neighbors Five,-98.64072307105775,2
-Support Vector Regression,-99.06866967847138,3
-Bagging Regressor,-122.77268778175512,4
-Random Forest,-128.32427560940448,5
-Decision Tree,-129.3454000252573,6
-Adaptive Boosting,-132.0852390658834,7
-Extra Trees,-140.9531337815615,8
-Gaussian Process Regression,-141.5786214304178,9
-Gradient Boosting,-141.9177713840865,10
-Linear Regression,-149.27923669918525,11
-Lasso Regression,-149.27924021485984,12
-Elastic Net Regression,-149.2795020178919,13
-Ridge Regression,-149.27960176775667,14
-Polynomial Regression Degree 2,-158.58723706228363,15
-Polynomial Ridge Degree 2,-158.58826456365264,16
-Polynomial Ridge Degree 3,-247.5758798315886,17
-Histogram Gradient Boosting,-252.87719027504144,18
-Stochastic Gradient Regression,-434.2303893532224,19
-Polynomial Regression Degree 3,-1080302.953353379,20
+K Nearest Neighbors Three,-98.64072307105775,3
+Support Vector Regression,-99.06866967847138,4
+Bagging Regressor,-122.77268778175512,5
+Random Forest,-128.32427560940448,6
+Decision Tree,-129.3454000252573,7
+Adaptive Boosting,-132.0852390658834,8
+Extra Trees,-140.9531337815615,9
+Gaussian Process Regression,-141.5786214304178,10
+Kernel Ridge Regression,-141.89175598304323,11
+Gradient Boosting,-141.9177713840865,12
+Bayesian Ridge Regression,-145.8349958790385,13
+ARD Regression,-145.8349958790385,14
+Linear Regression,-149.27923669918525,15
+Lasso Regression,-149.27924021485984,16
+Elastic Net Regression,-149.2795020178919,17
+Ridge Regression,-149.27960176775667,18
+Polynomial Regression Degree 2,-158.58723706228363,19
+Polynomial Ridge Degree 2,-158.58826456365264,20
+Huber Regression,-161.85007413479747,21
+RANSAC Regression,-207.85631888006932,22
+Polynomial Ridge Degree 3,-247.5758798315886,23
+Histogram Gradient Boosting,-252.87719027504144,24
+Stochastic Gradient Regression,-434.2303893532224,25
+Polynomial Regression Degree 3,-1080302.953353379,26
