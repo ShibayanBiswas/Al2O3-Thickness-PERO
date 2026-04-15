@@ -110,9 +110,11 @@ def diagnostic_plots_per_target(
     import seaborn as sns
 
     # One more folder depth for compact organization
-    calib_dir = ensure_dir(out_dir / "Calibration")
-    resid_dir = ensure_dir(out_dir / "Residuals")
-    dist_dir = ensure_dir(out_dir / "Distributions")
+    # Do not mkdir upfront: if a model/target fails mid-flight, we'd leave empty folders.
+    # `savefig` / `save_plot_csv` create directories only when a plot is actually written.
+    calib_dir = out_dir / "Calibration"
+    resid_dir = out_dir / "Residuals"
+    dist_dir = out_dir / "Distributions"
     x = np.asarray(x, dtype=float).ravel()
     y_true = np.asarray(y_true, dtype=float).ravel()
     y_pred = np.asarray(y_pred, dtype=float).ravel()
