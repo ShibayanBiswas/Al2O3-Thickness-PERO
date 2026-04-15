@@ -10,29 +10,33 @@ from .utils import strip_parentheses_text, to_title_case
 @dataclass(frozen=True)
 class PeroPalette:
     """
-    Single source for figure colors (dark theme). Keeps EDA, diagnostics, and
+    Single source for figure colors (light theme). Keeps EDA, diagnostics, and
     explainability visually consistent for thesis-style exports.
     """
 
-    bg: str = "#0B0F1A"
-    panel: str = "#121B2E"
-    text: str = "#EAF0FF"
-    axis: str = "#D9E1FF"
-    grid: str = "#3A466B"
-    grid_major: str = "#5A6AA0"
-    grid_minor: str = "#2B3452"
-    ink: str = "#0B0F1A"
-    sky: str = "#5BC0EB"
-    orange: str = "#FF9F1C"
-    green: str = "#9FD356"
-    gold: str = "#F7B801"
-    red: str = "#D7263D"
-    teal: str = "#1B998B"
-    bar: str = "#2E86AB"
-    violet: str = "#5E2BFF"
-    lilac: str = "#C17CFF"
-    legend_edge: str = "#5BC0EB"
-    qq_ref: str = "#D7263D"
+    # Light background + high-contrast inks (user request: white background, bold text).
+    bg: str = "#FFFFFF"
+    panel: str = "#F4F6FA"
+    text: str = "#111111"
+    axis: str = "#111111"
+    grid: str = "#C9D2E3"
+    grid_major: str = "#C9D2E3"
+    grid_minor: str = "#E3E9F5"
+    ink: str = "#111111"
+
+    # Series hues tuned for white backgrounds (dark enough to read, still vivid).
+    sky: str = "#1565C0"  # deep blue
+    orange: str = "#EF6C00"
+    green: str = "#2E7D32"
+    gold: str = "#F9A825"
+    red: str = "#C62828"
+    teal: str = "#00897B"
+    bar: str = "#37474F"
+    violet: str = "#5E35B1"
+    lilac: str = "#8E24AA"
+
+    legend_edge: str = "#111111"
+    qq_ref: str = "#C62828"
 
     def multiline_series(self) -> list[str]:
         """Distinct hues for several overlaid KDEs (e.g. scaling comparison)."""
@@ -115,24 +119,27 @@ def apply_pero_theme(cfg: object) -> None:
             "ytick.minor.size": 2.8,
             "xtick.direction": "out",
             "ytick.direction": "out",
-            # Grids: we prefer prominent majors + subtle minors on dark background.
+            # Grids: prominent majors + subtle minors on white background.
             "axes.grid": True,
             "axes.axisbelow": True,
             "axes.grid.which": "both",
             "xtick.minor.visible": True,
             "ytick.minor.visible": True,
             "grid.color": p.grid_major,
-            "grid.alpha": 0.78,
-            "grid.linewidth": 1.25,
+            "grid.alpha": 0.85,
+            "grid.linewidth": 1.15,
             "grid.linestyle": "-",
-            "axes.titleweight": "semibold",
+            # User request: bold text everywhere (titles/labels/ticks/legend).
+            "font.weight": "bold",
+            "axes.titleweight": "bold",
+            "axes.labelweight": "bold",
             "axes.titlesize": 16,
             "axes.labelsize": 13,
             "axes.titlepad": 10.0,
             "axes.labelpad": 6.0,
             "legend.frameon": True,
             "legend.facecolor": p.panel,
-            "legend.edgecolor": p.grid,
+            "legend.edgecolor": p.axis,
             "legend.fontsize": 10.5,
             "legend.title_fontsize": 11.5,
             "legend.shadow": False,
@@ -156,12 +163,12 @@ def apply_pero_theme(cfg: object) -> None:
         base.update(
             {
                 "grid.major.color": p.grid_major,
-                "grid.major.alpha": 0.78,
-                "grid.major.linewidth": 1.25,
+                "grid.major.alpha": 0.85,
+                "grid.major.linewidth": 1.15,
                 "grid.major.linestyle": "-",
                 "grid.minor.color": p.grid_minor,
-                "grid.minor.alpha": 0.52,
-                "grid.minor.linewidth": 0.85,
+                "grid.minor.alpha": 0.75,
+                "grid.minor.linewidth": 0.8,
                 "grid.minor.linestyle": "-",
             }
         )
@@ -174,19 +181,21 @@ def polish_axes(ax) -> None:
         spine.set_linewidth(1.05)
         spine.set_color(PERO.axis)
         spine.set_alpha(0.92)
-    ax.grid(True, which="major", alpha=0.78, linewidth=1.25, color=PERO.grid_major)
+    ax.grid(True, which="major", alpha=0.85, linewidth=1.15, color=PERO.grid_major)
     try:
         ax.minorticks_on()
         ax.tick_params(which="major", length=5, width=1.0, colors=PERO.text, labelcolor=PERO.text)
         ax.tick_params(which="minor", length=2.5, width=0.7, colors=PERO.text, labelsize=9)
-        ax.grid(True, which="minor", alpha=0.52, linewidth=0.85, color=PERO.grid_minor)
+        ax.grid(True, which="minor", alpha=0.75, linewidth=0.8, color=PERO.grid_minor)
     except Exception:
         ax.tick_params(colors=PERO.text, labelcolor=PERO.text)
 
 
 def set_dark_background(fig, axes) -> None:
     """
-    Force PERO dark background even when callers create figures directly.
+    Apply PERO background even when callers create figures directly.
+
+    Historical name kept to avoid touching many callsites.
     """
     try:
         fig.patch.set_facecolor(PERO.bg)
@@ -246,6 +255,9 @@ def apply_sexy_shadows(ax) -> None:
     Add subtle shadows/strokes to improve legibility on dark backgrounds.
     Uses Matplotlib path effects (no extra dependencies).
     """
+    # On a white background, shadows/strokes tend to reduce crispness.
+    if str(PERO.bg).strip().lower() in {"#fff", "#ffffff", "white"}:
+        return
     try:
         import matplotlib.patheffects as pe
     except Exception:
