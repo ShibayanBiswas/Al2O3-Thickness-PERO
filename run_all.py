@@ -110,6 +110,29 @@ def main() -> int:
     model_suite = build_model_suite(random_seed=cfg.random_seed)
     log.info("Model fitting started: %s candidate models", len(model_suite))
 
+    # Clarify why optional boosters might be missing from outputs/models/diagnostics_plots/.
+    # These are disabled by default (Windows native deps can be fragile).
+    try:
+        import os
+
+        from src.utils import optional_import
+
+        enable_optional = os.environ.get("PERO_ENABLE_OPTIONAL_BOOSTERS", "").strip() in {"1", "true", "True", "YES", "yes"}
+        if not enable_optional:
+            log.info(
+                "Optional external boosters are disabled. Set PERO_ENABLE_OPTIONAL_BOOSTERS=1 to enable XGBoost/LightGBM/CatBoost "
+                "(if installed)."
+            )
+        else:
+            log.info(
+                "Optional external boosters enabled. Availability: xgboost=%s lightgbm=%s catboost=%s",
+                bool(optional_import("xgboost")),
+                bool(optional_import("lightgbm")),
+                bool(optional_import("catboost")),
+            )
+    except Exception:
+        pass
+
     all_metric_tables = []
     model_names = []
     per_model_metrics_paths = []

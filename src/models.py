@@ -32,11 +32,16 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
     from sklearn.gaussian_process import GaussianProcessRegressor
     from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
     from sklearn.linear_model import (
+        ARDRegression,
+        BayesianRidge,
         ElasticNet,
+        HuberRegressor,
         Lasso,
         LinearRegression,
+        RANSACRegressor,
         Ridge,
         SGDRegressor,
+        TheilSenRegressor,
     )
     from sklearn.multioutput import MultiOutputRegressor
     from sklearn.neighbors import KNeighborsRegressor
@@ -44,6 +49,7 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
     from sklearn.preprocessing import PolynomialFeatures, StandardScaler
     from sklearn.svm import SVR
     from sklearn.tree import DecisionTreeRegressor
+    from sklearn.kernel_ridge import KernelRidge
 
     # HistGradientBoostingRegressor can be faster/more stable for certain patterns
     try:
@@ -68,6 +74,64 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
             n_features_effective=1,
         )
     )
+
+    # Robust linear variants (still single-feature; wrap for multi-output).
+    try:
+        suite.append(
+            ModelSpec(
+                "Huber Regression",
+                MultiOutputRegressor(with_scaler(HuberRegressor(epsilon=1.35, max_iter=5000))),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
+    try:
+        suite.append(
+            ModelSpec(
+                "Theil Sen Regression",
+                MultiOutputRegressor(with_scaler(TheilSenRegressor(random_state=random_seed))),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
+    try:
+        # sklearn renamed argument from base_estimator->estimator; support both.
+        ransac = None
+        try:
+            ransac = RANSACRegressor(estimator=LinearRegression(), random_state=random_seed)
+        except TypeError:
+            ransac = RANSACRegressor(base_estimator=LinearRegression(), random_state=random_seed)  # type: ignore
+        suite.append(
+            ModelSpec(
+                "RANSAC Regression",
+                MultiOutputRegressor(with_scaler(ransac)),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
+    try:
+        suite.append(
+            ModelSpec(
+                "Bayesian Ridge Regression",
+                MultiOutputRegressor(with_scaler(BayesianRidge())),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
+    try:
+        suite.append(
+            ModelSpec(
+                "ARD Regression",
+                MultiOutputRegressor(with_scaler(ARDRegression())),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
 
     # Polynomial regression (engineered features derived only from thickness)
     for deg in (2, 3):
@@ -113,6 +177,18 @@ def build_model_suite(random_seed: int) -> list[ModelSpec]:
             n_features_effective=1,
         )
     )
+
+    # Kernel ridge (smooth nonlinear map without tree discontinuities).
+    try:
+        suite.append(
+            ModelSpec(
+                "Kernel Ridge Regression",
+                MultiOutputRegressor(with_scaler(KernelRidge(alpha=1.0, kernel="rbf", gamma=None))),
+                n_features_effective=1,
+            )
+        )
+    except Exception:
+        pass
 
     # TREE-BASED
     suite.append(ModelSpec("Decision Tree", DecisionTreeRegressor(random_state=random_seed), n_features_effective=1))
